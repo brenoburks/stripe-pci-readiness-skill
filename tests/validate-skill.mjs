@@ -17,6 +17,8 @@ const requiredSkillFiles = [
   "skills/stripe-pci-readiness/scripts/render-report.mjs",
   "tests/fixtures/misleading-saq-a-assessment.md",
   "tests/fixtures/misleading-saq-a-assessment.expected.md",
+  "tests/fixtures/unsafe-raw-card-report.json",
+  "tests/fixtures/non-web-out-of-scope-report.json",
 ];
 
 const requiredPublicFiles = [
@@ -116,6 +118,10 @@ function validateGuidanceContract() {
     ["redaction", /redact/i],
     ["accepting entity", /accepting entit/i],
     ["ASV", /\bASV\b/],
+    ["web e-commerce scope routing", /out of scope.*specialist|specialist.*out of scope/i],
+    ["deployed provenance", /deployed[- ]runtime|deployed commit|source.*runtime/i],
+    ["service-provider responsibilities", /service.provider|third.party/i],
+    ["script inventory", /script inventory|first.*third.*fourth/i],
     ["non-certification disclaimer", /technical PCI-readiness assessment, not certification or legal advice/i],
   ];
 
@@ -127,7 +133,11 @@ function validateGuidanceContract() {
   for (const url of [
     "https://www.pcisecuritystandards.org/faqs/1604/",
     "https://www.pcisecuritystandards.org/faqs/1588/",
+    "https://www.pcisecuritystandards.org/faqs/1312/",
+    "https://www.pcisecuritystandards.org/faqs/1579/",
     "https://docs.stripe.com/security/guide",
+    "https://docs.stripe.com/payments/elements",
+    "https://docs.stripe.com/payments/payment-intents",
   ]) {
     if (!sourcePolicy.includes(url)) fail(`Source policy is missing authoritative baseline: ${url}`);
   }

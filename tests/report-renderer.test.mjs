@@ -8,6 +8,8 @@ import test from "node:test";
 const root = process.cwd();
 const renderer = path.join(root, "skills", "stripe-pci-readiness", "scripts", "render-report.mjs");
 const fixture = path.join(root, "tests", "fixtures", "report-input.json");
+const unsafeFixture = path.join(root, "tests", "fixtures", "unsafe-raw-card-report.json");
+const outOfScopeFixture = path.join(root, "tests", "fixtures", "non-web-out-of-scope-report.json");
 
 function runRenderer(input, output) {
   return spawnSync(process.execPath, [renderer, "--input", input, "--output", output], {
@@ -59,6 +61,72 @@ test("renders a valid assessment as one self-contained professional HTML report"
     assert.doesNotMatch(html, /<link\b[^>]*rel=["']stylesheet/i);
     assert.doesNotMatch(html, /@import\b|url\(\s*["']?https?:/i);
     assert.doesNotMatch(html, /<img\b/i);
+  });
+});
+
+test("renders the mandatory provenance, version, script, provider, and separated-action records", () => {
+  withTempDir((directory) => {
+    const output = path.join(directory, "pci-readiness-report.html");
+    const result = runRenderer(fixture, output);
+
+    assert.equal(result.status, 0, result.stderr);
+    const html = fs.readFileSync(output, "utf8");
+    for (const heading of [
+      "Assessment provenance",
+      "Integration and version inventory",
+      "Payment-page script inventory",
+      "Service-provider responsibilities",
+      "PCI obligations and validation dependencies",
+      "Business launch rules",
+      "Defence-in-depth hardening",
+    ]) {
+      assert.match(html, new RegExp(heading, "i"));
+    }
+    assert.match(html, /Exact deployed commit/i);
+    assert.match(html, /Not verified/i);
+    assert.match(html, /Third-party/i);
+    assert.match(html, /Self-hosted CI runner/i);
+  });
+});
+
+test("rejects prohibited certification and unsupported paid-ASV overclaims", () => {
+  withTempDir((directory) => {
+    const input = path.join(directory, "overclaim.json");
+    const output = path.join(directory, "report.html");
+    const data = JSON.parse(fs.readFileSync(fixture, "utf8"));
+    data.report.executiveSummary.push("The merchant is PCI compliant after its paid ASV scan.");
+    fs.writeFileSync(input, JSON.stringify(data));
+
+    const result = runRenderer(input, output);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /prohibited overclaim/i);
+    assert.equal(fs.existsSync(output), false);
+  });
+});
+
+test("accepts a raw-card urgent-review classification and an explicitly out-of-scope non-web assessment", () => {
+  withTempDir((directory) => {
+    for (const [fixturePath, outputName] of [[unsafeFixture, "unsafe.html"], [outOfScopeFixture, "out-of-scope.html"]]) {
+      const output = path.join(directory, outputName);
+      const result = runRenderer(fixturePath, output);
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(fs.existsSync(output), true);
+    }
+  });
+});
+
+test("mobile report CSS removes table headers from layout and allows long status text to wrap", () => {
+  withTempDir((directory) => {
+    const output = path.join(directory, "pci-readiness-report.html");
+    const result = runRenderer(fixture, output);
+
+    assert.equal(result.status, 0, result.stderr);
+    const html = fs.readFileSync(output, "utf8");
+    const mobileCss = html.match(/@media \(max-width: 560px\) \{([\s\S]*?)\n    \}/)?.[1];
+
+    assert.ok(mobileCss, "expected the narrow-screen media query");
+    assert.match(mobileCss, /thead\s*\{\s*display:\s*none;/);
+    assert.match(mobileCss, /\.status\s*\{[^}]*white-space:\s*normal;[^}]*overflow-wrap:\s*anywhere;/s);
   });
 });
 

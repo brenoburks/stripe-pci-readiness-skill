@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["schemaVersion", "report"],
   "properties": {
-    "schemaVersion": { "const": 1 },
+    "schemaVersion": { "const": 2 },
     "report": { "$ref": "#/$defs/report" }
   },
   "$defs": {
@@ -23,15 +23,90 @@
         "assessmentType": { "$ref": "#/$defs/text" }
       }
     },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assessedSource", "deployedRuntime"],
+      "properties": {
+        "assessedSource": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["commit", "branch", "worktreeState", "capturedAt", "evidence"],
+          "properties": {
+            "commit": { "$ref": "#/$defs/text" },
+            "branch": { "$ref": "#/$defs/text" },
+            "worktreeState": { "$ref": "#/$defs/text" },
+            "capturedAt": { "$ref": "#/$defs/text" },
+            "evidence": { "$ref": "#/$defs/text" }
+          }
+        },
+        "deployedRuntime": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "exactCommitStatus", "evidence"],
+          "properties": {
+            "status": { "$ref": "#/$defs/text" },
+            "exactCommitStatus": { "$ref": "#/$defs/text" },
+            "evidence": { "$ref": "#/$defs/text" }
+          }
+        }
+      }
+    },
+    "scriptInventoryItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["party", "owner", "purpose", "source", "changeControl", "paymentImpact", "evidence"],
+      "properties": {
+        "party": { "$ref": "#/$defs/text" },
+        "owner": { "$ref": "#/$defs/text" },
+        "purpose": { "$ref": "#/$defs/text" },
+        "source": { "$ref": "#/$defs/text" },
+        "changeControl": { "$ref": "#/$defs/text" },
+        "paymentImpact": { "$ref": "#/$defs/text" },
+        "evidence": { "$ref": "#/$defs/text" }
+      }
+    },
+    "serviceProvider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "role", "paymentSecurityImpact", "responsibility", "status", "evidence"],
+      "properties": {
+        "provider": { "$ref": "#/$defs/text" },
+        "role": { "$ref": "#/$defs/text" },
+        "paymentSecurityImpact": { "$ref": "#/$defs/text" },
+        "responsibility": { "$ref": "#/$defs/text" },
+        "status": { "$ref": "#/$defs/text" },
+        "evidence": { "$ref": "#/$defs/text" }
+      }
+    },
+    "inventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["integrationScope", "paymentPattern", "frameworkRuntime", "stripeSdk", "stripeApiVersion", "webhookApiVersion", "versionEvidence", "upgradeAssessment", "paymentPageScripts", "serviceProviders"],
+      "properties": {
+        "integrationScope": { "enum": ["web-ecommerce", "out-of-current-skill-scope"] },
+        "paymentPattern": { "$ref": "#/$defs/text" },
+        "frameworkRuntime": { "$ref": "#/$defs/text" },
+        "stripeSdk": { "$ref": "#/$defs/text" },
+        "stripeApiVersion": { "$ref": "#/$defs/text" },
+        "webhookApiVersion": { "$ref": "#/$defs/text" },
+        "versionEvidence": { "$ref": "#/$defs/text" },
+        "upgradeAssessment": { "$ref": "#/$defs/text" },
+        "paymentPageScripts": { "type": "array", "items": { "$ref": "#/$defs/scriptInventoryItem" } },
+        "serviceProviders": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/serviceProvider" } }
+      }
+    },
     "outcome": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["classification", "confidence", "rawCardDataExposure", "launchBlockers", "keyUncertainty"],
+      "required": ["classification", "confidence", "rawCardDataExposure", "pciDependencies", "businessLaunchRules", "defenseInDepth", "keyUncertainty"],
       "properties": {
         "classification": { "$ref": "#/$defs/text" },
         "confidence": { "$ref": "#/$defs/text" },
         "rawCardDataExposure": { "$ref": "#/$defs/text" },
-        "launchBlockers": { "$ref": "#/$defs/textArray" },
+        "pciDependencies": { "$ref": "#/$defs/textArray" },
+        "businessLaunchRules": { "$ref": "#/$defs/textArray" },
+        "defenseInDepth": { "$ref": "#/$defs/textArray" },
         "keyUncertainty": { "$ref": "#/$defs/text" }
       }
     },
@@ -110,9 +185,10 @@
     "remediationItem": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["action", "owner", "verification"],
+      "required": ["action", "timing", "owner", "verification"],
       "properties": {
         "action": { "$ref": "#/$defs/text" },
+        "timing": { "$ref": "#/$defs/text" },
         "owner": { "$ref": "#/$defs/text" },
         "verification": { "$ref": "#/$defs/text" }
       }
@@ -120,11 +196,11 @@
     "remediation": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["launchBlockers", "beforeLaunch", "postLaunch"],
+      "required": ["pciDependencies", "businessLaunchRules", "defenseInDepth"],
       "properties": {
-        "launchBlockers": { "type": "array", "items": { "$ref": "#/$defs/remediationItem" } },
-        "beforeLaunch": { "type": "array", "items": { "$ref": "#/$defs/remediationItem" } },
-        "postLaunch": { "type": "array", "items": { "$ref": "#/$defs/remediationItem" } }
+        "pciDependencies": { "type": "array", "items": { "$ref": "#/$defs/remediationItem" } },
+        "businessLaunchRules": { "type": "array", "items": { "$ref": "#/$defs/remediationItem" } },
+        "defenseInDepth": { "type": "array", "items": { "$ref": "#/$defs/remediationItem" } }
       }
     },
     "source": {
@@ -142,12 +218,14 @@
     "report": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["title", "subject", "generatedAt", "assessment", "outcome", "executiveSummary", "scope", "paymentFlow", "findings", "claimLedger", "controls", "remediation", "unknowns", "sources", "disclaimer"],
+      "required": ["title", "subject", "generatedAt", "assessment", "provenance", "inventory", "outcome", "executiveSummary", "scope", "paymentFlow", "findings", "claimLedger", "controls", "remediation", "unknowns", "sources", "disclaimer"],
       "properties": {
         "title": { "$ref": "#/$defs/text" },
         "subject": { "$ref": "#/$defs/text" },
         "generatedAt": { "$ref": "#/$defs/text" },
         "assessment": { "$ref": "#/$defs/assessment" },
+        "provenance": { "$ref": "#/$defs/provenance" },
+        "inventory": { "$ref": "#/$defs/inventory" },
         "outcome": { "$ref": "#/$defs/outcome" },
         "executiveSummary": { "$ref": "#/$defs/textArray" },
         "scope": { "$ref": "#/$defs/scope" },

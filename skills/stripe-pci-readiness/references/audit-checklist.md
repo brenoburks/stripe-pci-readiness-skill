@@ -18,8 +18,10 @@ Use the sections relevant to the detected integration. This checklist is not PCI
 ## Audit baseline
 
 - Record repository path, commit, branch, dirty-worktree state, review date, reviewer, and authorised environments.
-- Identify stack, deployment model, public payment domains, CDN/DNS, Stripe SDK and API versions, payment UI, API routes, databases, queues, object stores, logs, APM, analytics, support tooling, and backups.
+- Record assessed-source provenance separately from deployed-runtime evidence. State the exact deployed commit status as `verified`, `not verified`, or another qualified status; source and runtime observations must never be blended.
+- Identify stack, deployment model, public payment domains, CDN/DNS, Stripe SDK/runtime/API/webhook API versions, payment UI, API routes, databases, queues, object stores, logs, APM, analytics, support tooling, and backups. Record version evidence and an upgrade/drift assessment.
 - Identify all payment channels: website, mobile, telephone, email, chat, paper, invoices, dashboard-entered payments, and third-party links.
+- Route Connect, Terminal/card-present, native mobile, MOTO/manual-entry, Payment Links/hosted-only, subscriptions/invoices/Customer Portal, SetupIntents/saved-methods, multi-account/entity, and non-payment Stripe products to the appropriate specialist assessment before applying the web-ecommerce classification.
 - Record evidence unavailable to the audit. Do not convert an unchecked control into a pass.
 
 ## Payment capture and scope
@@ -46,6 +48,8 @@ Use the sections relevant to the detected integration. This checklist is not PCI
 ## Stripe server integration
 
 - Identify Stripe SDK version, API version, API calls, and server/client responsibility.
+- Record the effective Stripe API version and endpoint/webhook API version independently. Consult current [Stripe API versioning](https://docs.stripe.com/api/versioning?lang=node) and [Stripe webhook versioning](https://docs.stripe.com/webhooks/versioning); test relevant PaymentIntent, webhook and error-path behaviour before an SDK/API upgrade.
+- Use current documentation for the exact detected UI: [Stripe Elements](https://docs.stripe.com/payments/elements), [PaymentIntents](https://docs.stripe.com/payments/payment-intents), or [Express Checkout Element](https://docs.stripe.com/elements/express-checkout-element). Do not substitute deprecated Payment Request Button or unrelated authentication guidance.
 - Calculate product, currency, discounts, tax, postage, and final amount server-side. Treat client-provided product references as untrusted lookup keys.
 - Bind payment state to a durable order and prevent fulfilment from a client redirect, query string, or unverified client status alone.
 - Review idempotency, concurrency, inventory, replay, retries, cancellation, failure, asynchronous processing, refunds, and disputes.
@@ -79,6 +83,8 @@ Assess implementation against current [Stripe webhook documentation](https://doc
 
 - Check runtime/framework support status, lockfiles, direct/transitive dependency advisories, patch cadence, build provenance, and deploy reproducibility.
 - Review source control, CI/CD, hosting, database, Stripe Dashboard, DNS/CDN, email, analytics, monitoring, and support-system access.
+- Inventory third-party service providers and systems that can affect payment security even where they do not handle card data. Record provider, role, payment-security impact, responsibility, evidence, and current status. Use [PCI SSC FAQ 1312](https://www.pcisecuritystandards.org/faqs/1312/) and [FAQ 1579](https://www.pcisecuritystandards.org/faqs/1579/) for the current responsibility/scope basis.
+- Treat self-hosted CI runners as a separate risk surface: assess patching, isolation, workflow permissions, credential persistence, workspace cleanup, untrusted-code execution, and deployment credential scope.
 - Look for MFA, least privilege, role separation, offboarding, shared accounts, audit logging, protected branches, review gates, and emergency access.
 - Review secret stores, environment-variable exposure, build logs, preview deployments, developer machines, and backup access.
 - Review monitoring, incident response, breach escalation, restoration tests, retention schedules, and evidence ownership.
@@ -96,7 +102,7 @@ Repository inspection cannot prove these items. Request evidence or mark `not ve
 - telephone, paper, email, chat, dashboard, refund, dispute, and support procedures;
 - live deployment configuration and operational separation from test systems.
 
-PCI SSC FAQ 1604 states that PCI DSS v4.x SAQ A includes external ASV scanning for merchant e-commerce webpages using both redirect and embedded-iframe patterns: [PCI SSC FAQ 1604](https://www.pcisecuritystandards.org/faqs/1604/). Confirm applicability and evidence with the accepting entity; do not convert a normal scan into an ASV report.
+PCI SSC FAQ 1604 states that PCI DSS v4.x SAQ A includes external ASV scanning for merchant e-commerce webpages using both redirect and embedded-iframe patterns: [PCI SSC FAQ 1604](https://www.pcisecuritystandards.org/faqs/1604/). Confirm the applicable validation path and timing with the accepting entity. Refer only to a passing/approved ASV report, never a “paid ASV”; do not convert a normal scan into an ASV report.
 
 ## Preliminary classification
 
@@ -117,3 +123,5 @@ Do not assign a merchant level from transaction volume estimates alone. Ask the 
 - **Low:** defence-in-depth or documentation improvement with limited immediate scope effect.
 
 For every finding, include exact evidence, evidence class, applicable source, consequence, action, owner, verification method, confidence, and counter-evidence result. Never downgrade a requirement because a merchant is small, charitable, low-volume, pre-launch, or has not processed a live payment.
+
+Report PCI obligations/validation dependencies, merchant business launch rules, and defence-in-depth recommendations in separate groups. A card-brand policy, an enquiry workflow, or an owner preference is not a PCI obligation unless current applicable authority establishes it.

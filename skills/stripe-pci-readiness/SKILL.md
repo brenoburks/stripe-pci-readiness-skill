@@ -1,11 +1,27 @@
 ---
 name: stripe-pci-readiness
-description: Use when reviewing a repository or deployed web application that accepts online payments through Stripe for PCI DSS scope, card-data exposure, SAQ readiness, payment-page security, or webhook controls.
+description: Use when reviewing a Stripe web-ecommerce repository or deployed checkout for PCI DSS scope, card-data exposure, payment-page security, or webhook controls. Route specialist Stripe patterns outside this scope.
 ---
 
 # Stripe PCI Readiness
 
-Perform a read-only technical assessment. Payment-data flow—not hosting provider, database, framework, or use of Stripe alone—drives the preliminary scope analysis.
+Perform a read-only technical assessment of **Stripe web e-commerce**. Payment-data flow—not hosting provider, database, framework, or use of Stripe alone—drives the preliminary scope analysis.
+
+## Scope routing
+
+This skill covers browser-based merchant payment flows: Stripe-hosted Checkout, embedded Checkout, Payment Element, individual Elements, Express Checkout, PaymentIntents, and their webhooks.
+
+Before collecting PCI evidence, identify the payment pattern. Stop after recording a concise routing finding if the primary payment flow is any of the following; use a specialist assessment rather than applying this skill’s web-ecommerce classification:
+
+- Stripe Connect or marketplace charges: determine charge model, merchant of record, connected-account responsibilities, and platform data flow first.
+- Stripe Terminal or any card-present/P2PE workflow.
+- Native iOS, Android, React Native, or other mobile SDK payment capture.
+- MOTO, telephone, email, chat, paper, or Dashboard-entered card payments.
+- Payment Links or hosted-only flows where the repository does not control a payment page; assess the merchant site’s redirect/link handling and operational channels separately.
+- Subscriptions, invoices, Customer Portal, SetupIntents, saved methods, or multi-account/multi-entity Stripe configurations when they materially change the payment flow or responsible merchant.
+- Non-payment Stripe products such as Issuing, Treasury, Tax, Identity, Radar-only, or Stripe Apps.
+
+Do not call an out-of-scope pattern secure, compliant, or low risk. Report `Out of scope — specialist Stripe integration`, identify the detected pattern, and state the specialist review required.
 
 ## Boundaries
 
@@ -27,30 +43,35 @@ If either reference is unavailable, stop rather than improvise compliance rules.
 ## Workflow
 
 1. Read repository instructions. Record commit, worktree state, requested environments, and authorised checks.
-2. Identify the payment UI, Stripe SDK/API versions, server routes, webhooks, storage, logs, monitoring, analytics, scripts, hosting, and operational payment channels.
+2. Establish scope routing. For web e-commerce, identify the payment UI, Stripe SDK/runtime/API/webhook versions, server routes, webhooks, storage, logs, monitoring, analytics, first/third/fourth-party scripts, hosting, service providers, self-hosted CI runners, and operational payment channels.
 3. Trace card data from browser entry through Stripe and every merchant-controlled system. Establish who renders PAN, expiry, and CVC fields.
-4. Inspect source and, when authorised, deployed runtime evidence. Keep repository observations, runtime observations, merchant assertions, and external requirements separate.
-5. Research current primary sources. Record version, applicability, publication/revision date when available, and retrieval date. Run the source policy’s counter-evidence pass before classifying scope or obligations.
-6. Search safely for raw card data, leaked secrets, unsafe telemetry, client-controlled prices, unsigned webhooks, replay risks, fulfilment from client redirects, and test/live crossover. Redact discoveries immediately.
-7. Run existing non-mutating tests and audits when useful. Do not install dependencies or change lockfiles without permission.
-8. Build the claim ledger. Missing, conflicting, stale, or inaccessible evidence becomes `not verified` or `requires accepting-entity confirmation`.
-9. Provide only a preliminary classification: likely SAQ A candidate, potential SAQ A-EP or broader scope, potential SAQ D/urgent specialist review, or indeterminate.
+4. Record assessed-source provenance—exact commit, branch, worktree state, capture time and evidence—separately from deployed-runtime provenance. Record whether the exact deployed commit is verified. Never imply source/deployment equivalence when it is not established.
+5. Inspect source and, when authorised, deployed runtime evidence. Live DOM evidence is required to verify who renders payment fields; repository markup is not enough. Source-code absence cannot prove behaviour in runtime logs, proxies, queues, analytics, exports, support tools, or backups.
+6. Inventory framework/runtime, Stripe SDK, effective API version, endpoint/webhook API version, evidence source, and upgrade/drift assessment. API and webhook versions may differ; do not infer either from package presence alone.
+7. Inventory every first-, third-, and fourth-party script on payment-related pages: owner, purpose, origin, change control, payment impact and evidence. Inventory each service provider and system that can affect payment security, including CDN/DNS, hosting, CI/CD and self-hosted runners, with responsibility and evidence.
+8. Research current primary sources. Record version, applicability, publication/revision date when available, and retrieval date. Run the source policy’s counter-evidence pass before classifying scope or obligations.
+9. Search safely for raw card data, leaked secrets, unsafe telemetry, client-controlled prices, unsigned webhooks, replay risks, fulfilment from client redirects, and test/live crossover. Redact discoveries immediately.
+10. Run existing non-mutating tests and audits when useful. Do not install dependencies or change lockfiles without permission.
+11. Build the claim ledger. Missing, conflicting, stale, or inaccessible evidence becomes `not verified` or `requires accepting-entity confirmation`.
+12. Provide only a preliminary classification: likely SAQ A candidate, potential SAQ A-EP or broader scope, potential SAQ D/urgent specialist review, or indeterminate.
 
 ## Report contract
 
-Lead with preliminary classification and confidence, whether raw card data appears able to touch merchant systems, launch blockers, and the most important uncertainty.
+Lead with preliminary classification and confidence, whether raw card data appears able to touch merchant systems, the separate PCI dependencies, business launch rules and defence-in-depth actions, and the most important uncertainty.
 
 Then provide:
 
-1. architecture and card-data flow;
-2. findings by severity with exact evidence, consequence, recommendation, and verification method;
-3. claim ledger with inline primary-source citations;
-4. preliminary PCI pathway and disqualifying conditions checked;
-5. technical controls and operational controls not provable from the repository;
-6. remediation grouped into launch blockers, before launch, and post-launch hardening;
-7. residual unknowns and exact questions that could change the result.
+1. assessed-source and deployed-runtime provenance, including exact deployed-commit status;
+2. integration/version inventory, script inventory, and service-provider responsibility inventory;
+3. architecture and card-data flow;
+4. findings by severity with exact evidence, consequence, recommendation, and verification method;
+5. claim ledger with inline primary-source citations;
+6. preliminary PCI pathway and disqualifying conditions checked;
+7. technical controls and operational controls not provable from the repository;
+8. remediation separated into PCI obligations/validation dependencies, business launch rules, and defence-in-depth hardening;
+9. residual unknowns and exact questions that could change the result.
 
-Label every material statement as a normative requirement, technical observation, inference, merchant assertion, recommendation, or unknown. Separate PCI obligations from general security hardening.
+Label every material statement as a normative requirement, technical observation, inference, merchant assertion, recommendation, or unknown. Keep PCI obligations/validation dependencies separate from business launch rules and general security hardening. A passing ASV report is not a “paid ASV”; confirm ASV applicability and timing with the compliance-accepting entity. For embedded-form script protection, apply the alternatives in PCI SSC FAQ 1588 and do not require both merchant techniques and payment-provider confirmation unless current applicable authority does.
 
 End exactly:
 

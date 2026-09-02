@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 2,
+  "report": {
+    "title": "Unsafe raw-card fixture",
+    "subject": "Example Store",
+    "generatedAt": "2026-09-02T10:30:00+10:00",
+    "assessment": { "repository": "example/unsafe", "commit": "unsafe123", "environment": "Local", "assessmentType": "Repository review" },
+    "provenance": {
+      "assessedSource": { "commit": "unsafe123", "branch": "main", "worktreeState": "Clean", "capturedAt": "2026-09-02T10:20:00+10:00", "evidence": "git evidence" },
+      "deployedRuntime": { "status": "Not verified", "exactCommitStatus": "Not verified", "evidence": "No runtime authorised" }
+    },
+    "inventory": {
+      "integrationScope": "web-ecommerce",
+      "paymentPattern": "Custom card form posts directly to merchant endpoint",
+      "frameworkRuntime": "Example runtime",
+      "stripeSdk": "Not applicable to observed capture path",
+      "stripeApiVersion": "Not verified",
+      "webhookApiVersion": "Not verified",
+      "versionEvidence": "Source observation",
+      "upgradeAssessment": "Contain the exposure before any further integration change.",
+      "paymentPageScripts": [{ "party": "First-party", "owner": "Merchant", "purpose": "Card capture", "source": "checkout.js", "changeControl": "Repository", "paymentImpact": "Posts card data to merchant server", "evidence": "src/checkout.js:10" }],
+      "serviceProviders": [{ "provider": "Hosting provider", "role": "Origin host", "paymentSecurityImpact": "Receives raw card data", "responsibility": "Contain and assess the environment", "status": "Not verified", "evidence": "Source observation" }]
+    },
+    "outcome": {
+      "classification": "Potential SAQ D / urgent specialist review",
+      "confidence": "High",
+      "rawCardDataExposure": "Raw PAN can reach the merchant server through the observed custom form endpoint.",
+      "pciDependencies": ["Stop and contain the raw-card route."],
+      "businessLaunchRules": [],
+      "defenseInDepth": [],
+      "keyUncertainty": "The breadth of logging and storage exposure is not verified."
+    },
+    "executiveSummary": ["A custom form can send raw account data to merchant infrastructure."],
+    "scope": { "included": ["Custom checkout source"], "excluded": ["Runtime logs"], "methodology": ["Static source review"] },
+    "paymentFlow": [{ "step": 1, "actor": "Browser", "action": "Posts card data to merchant route.", "evidence": "src/checkout.js:10" }],
+    "findings": [{ "id": "RAW-001", "title": "Raw card route observed", "severity": "Critical", "status": "Supported", "category": "PCI obligation", "statementType": "Technical observation", "observation": "Raw card data can reach the merchant route.", "consequence": "Broader PCI scope and urgent specialist containment are required.", "recommendation": "Remove the route and obtain specialist advice.", "verification": "Confirm the route no longer receives raw card data.", "evidence": ["src/checkout.js:10"], "sourceIds": ["SRC-STRIPE-ELEMENTS"] }],
+    "claimLedger": [{ "id": "CL-RAW", "claim": "The observed route can receive raw card data.", "type": "Technical observation", "status": "Supported", "evidence": "src/checkout.js:10", "sourceIds": ["SRC-STRIPE-ELEMENTS"] }],
+    "controls": { "technical": [], "operational": [] },
+    "remediation": {
+      "pciDependencies": [{ "action": "Contain the raw-card route.", "timing": "Immediately", "owner": "Engineering", "verification": "No raw-card path remains." }],
+      "businessLaunchRules": [],
+      "defenseInDepth": []
+    },
+    "unknowns": ["Whether raw data was logged or retained."],
+    "sources": [{ "id": "SRC-STRIPE-ELEMENTS", "title": "Stripe Elements", "publisher": "Stripe", "url": "https://docs.stripe.com/payments/elements", "retrievedAt": "2026-09-02" }],
+    "disclaimer": "This is a technical PCI-readiness assessment, not certification or legal advice."
+  }
+}

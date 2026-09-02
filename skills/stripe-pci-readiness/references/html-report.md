@@ -29,24 +29,30 @@ Do not hand-edit the output HTML. Correct the JSON or the renderer instead so th
 
 ## Field guide
 
-The root object contains `schemaVersion: 1` and `report`.
+The root object contains `schemaVersion: 2` and `report`.
 
 `report` requires:
 
 - `title`, `subject`, `generatedAt`, and the exact `disclaimer` required by `SKILL.md`;
 - `assessment`: repository, commit, environment, and assessment type;
-- `outcome`: preliminary classification, confidence, raw card-data exposure, launch blockers, and the most important uncertainty;
+- `provenance`: assessed-source commit/branch/worktree/capture evidence and separately the deployed-runtime status, evidence, and exact deployed-commit status;
+- `inventory`: web-ecommerce routing result; payment pattern; framework/runtime; Stripe SDK, API and webhook API versions; version evidence and upgrade/drift assessment; first/third/fourth-party script inventory; and service-provider responsibility inventory;
+- `outcome`: preliminary classification, confidence, raw card-data exposure, separate PCI dependencies, business launch rules, defence-in-depth hardening, and the most important uncertainty;
 - `executiveSummary`: concise decision-relevant statements;
 - `scope`: included, excluded, and methodology arrays;
 - `paymentFlow`: numbered actor, action, and evidence records;
 - `findings`: stable ID, title, severity, status, category, statement type, observation, consequence, recommendation, verification method, evidence, and source IDs;
 - `claimLedger`: claim, classification, status, evidence or qualification, and source IDs;
 - `controls`: separate technical and operational records;
-- `remediation`: launch blockers, before-launch actions, and post-launch hardening;
+- `remediation`: PCI obligations/validation dependencies, business launch rules, and defence-in-depth hardening. Each item has action, timing, owner, and verification;
 - `unknowns`: exact unresolved questions or gaps;
 - `sources`: stable ID, title, publisher, HTTPS URL, and retrieval date.
 
 Source IDs referenced by findings or claims must exist in `sources`. Empty or inaccessible evidence must be described as `Not verified` or `Not provided`; it must not be converted into a pass.
+
+For any routed Stripe pattern, set `inventory.integrationScope` to `out-of-current-skill-scope`, use the exact classification `Out of scope — specialist Stripe integration`, and explain the specialist review required. Do not use the renderer to make a web-ecommerce PCI classification for Connect, Terminal/card-present, native mobile, MOTO/manual entry, Payment Links/hosted-only, or another routed pattern.
+
+The renderer rejects likely certification claims, definitive-SAq language, and “paid ASV” wording. It also requires the provenance, inventory, script, provider, and separate action records above. These deterministic checks prevent known report defects; they do not replace professional judgement or primary-source research.
 
 ## Safety behaviour
 

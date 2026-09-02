@@ -144,7 +144,7 @@ The report is flat. It uses no decorative shadows. Depth comes from paper tones,
 
 ### Outcome panel
 
-The opening decision surface contains the preliminary classification, confidence, raw card-data exposure, launch blockers and most important uncertainty. It uses Pale Signal, one restrained Assurance Blue rule and plain-language qualifiers.
+The opening decision surface contains the preliminary classification, confidence, raw card-data exposure, PCI validation dependencies, business launch rules, defence-in-depth hardening and most important uncertainty. It uses Pale Signal, one restrained Assurance Blue rule and plain-language qualifiers.
 
 ### Findings
 

@@ -6,6 +6,15 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 const DISCLAIMER = "This is a technical PCI-readiness assessment, not certification or legal advice.";
+const CLASSIFICATIONS = new Set([
+  "Likely SAQ A candidate",
+  "Potential SAQ A-EP or broader scope",
+  "Potential SAQ D / urgent specialist review",
+  "Indeterminate",
+  "Out of scope — specialist Stripe integration",
+]);
+const STATEMENT_TYPES = new Set(["Normative requirement", "Technical observation", "Inference", "Merchant assertion", "Recommendation", "Unknown"]);
+const CLAIM_STATUSES = new Set(["Supported", "Contradicted", "Not verified", "Requires accepting-entity confirmation", "Not supported"]);
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const templatePath = path.join(scriptDir, "..", "assets", "report-template.html");
 
@@ -92,9 +101,21 @@ function rejectSensitiveData(data) {
   if (cvcKey.test(serialised)) fail("Sensitive CVC value detected. Remove it before rendering.");
 }
 
+function rejectProhibitedOverclaims(data) {
+  const serialised = JSON.stringify(data);
+  const prohibited = [
+    /\bpaid\s+ASV\b/i,
+    /\b(?:is|are)\s+(?:PCI\s+)?(?:DSS\s+)?(?:fully\s+)?(?:compliant|certified|audit[- ]ready)\b/i,
+    /\bdefinitively\s+(?:SAQ\s+[A-Z-]+|assigned\s+to\s+an?\s+SAQ)\b/i,
+  ];
+  if (prohibited.some((pattern) => pattern.test(serialised))) {
+    fail("Invalid report: prohibited overclaim detected. Use a preliminary classification or a qualified requirement instead.");
+  }
+}
+
 function validate(data) {
   requireRecord(data, "root");
-  if (data.schemaVersion !== 1) fail("Invalid report: schemaVersion must be 1.");
+  if (data.schemaVersion !== 2) fail("Invalid report: schemaVersion must be 2.");
   requireRecord(data.report, "report");
   const report = data.report;
   for (const field of ["title", "subject", "generatedAt", "disclaimer"]) requireString(report[field], `report.${field}`);
@@ -103,10 +124,37 @@ function validate(data) {
   requireRecord(report.assessment, "report.assessment");
   for (const field of ["repository", "commit", "environment", "assessmentType"]) requireString(report.assessment[field], `report.assessment.${field}`);
 
+  requireRecord(report.provenance, "report.provenance");
+  requireRecord(report.provenance.assessedSource, "report.provenance.assessedSource");
+  for (const field of ["commit", "branch", "worktreeState", "capturedAt", "evidence"]) requireString(report.provenance.assessedSource[field], `report.provenance.assessedSource.${field}`);
+  requireRecord(report.provenance.deployedRuntime, "report.provenance.deployedRuntime");
+  for (const field of ["status", "exactCommitStatus", "evidence"]) requireString(report.provenance.deployedRuntime[field], `report.provenance.deployedRuntime.${field}`);
+
+  requireRecord(report.inventory, "report.inventory");
+  for (const field of ["integrationScope", "paymentPattern", "frameworkRuntime", "stripeSdk", "stripeApiVersion", "webhookApiVersion", "versionEvidence", "upgradeAssessment"]) requireString(report.inventory[field], `report.inventory.${field}`);
+  if (!["web-ecommerce", "out-of-current-skill-scope"].includes(report.inventory.integrationScope)) {
+    fail("Invalid report: report.inventory.integrationScope must be web-ecommerce or out-of-current-skill-scope.");
+  }
+  validateItems(report.inventory.paymentPageScripts, ["party", "owner", "purpose", "source", "changeControl", "paymentImpact", "evidence"], "report.inventory.paymentPageScripts");
+  validateItems(report.inventory.serviceProviders, ["provider", "role", "paymentSecurityImpact", "responsibility", "status", "evidence"], "report.inventory.serviceProviders");
+  if (report.inventory.integrationScope === "web-ecommerce" && report.inventory.paymentPageScripts.length === 0) {
+    fail("Invalid report: a web-ecommerce assessment requires a payment-page script inventory.");
+  }
+  if (report.inventory.serviceProviders.length === 0) fail("Invalid report: service-provider responsibility inventory is required.");
+
   requireRecord(report.outcome, "report.outcome");
   for (const field of ["classification", "confidence", "rawCardDataExposure", "keyUncertainty"]) requireString(report.outcome[field], `report.outcome.${field}`);
-  requireArray(report.outcome.launchBlockers, "report.outcome.launchBlockers");
-  report.outcome.launchBlockers.forEach((item, index) => requireString(item, `report.outcome.launchBlockers[${index}]`));
+  if (!CLASSIFICATIONS.has(report.outcome.classification)) fail("Invalid report: outcome classification must use a supported preliminary label.");
+  for (const field of ["pciDependencies", "businessLaunchRules", "defenseInDepth"]) {
+    requireArray(report.outcome[field], `report.outcome.${field}`);
+    report.outcome[field].forEach((item, index) => requireString(item, `report.outcome.${field}[${index}]`));
+  }
+  if (report.inventory.integrationScope === "out-of-current-skill-scope" && report.outcome.classification !== "Out of scope — specialist Stripe integration") {
+    fail("Invalid report: routed assessments must be classified as out of scope for this skill.");
+  }
+  if (report.outcome.classification === "Potential SAQ D / urgent specialist review" && !/\b(?:can reach|reaches|observed|may touch)\b/i.test(report.outcome.rawCardDataExposure)) {
+    fail("Invalid report: urgent raw-card classification requires explicit exposure evidence.");
+  }
 
   for (const field of ["executiveSummary", "unknowns"]) {
     requireArray(report[field], `report.${field}`);
@@ -128,6 +176,7 @@ function validate(data) {
 
   validateItems(report.findings, ["id", "title", "severity", "status", "category", "statementType", "observation", "consequence", "recommendation", "verification"], "report.findings");
   report.findings.forEach((item, index) => {
+    if (!STATEMENT_TYPES.has(item.statementType)) fail(`Invalid report: report.findings[${index}].statementType is not an allowed evidence class.`);
     for (const field of ["evidence", "sourceIds"]) {
       requireArray(item[field], `report.findings[${index}].${field}`);
       item[field].forEach((value, valueIndex) => requireString(value, `report.findings[${index}].${field}[${valueIndex}]`));
@@ -136,6 +185,8 @@ function validate(data) {
 
   validateItems(report.claimLedger, ["id", "claim", "type", "status", "evidence"], "report.claimLedger");
   report.claimLedger.forEach((item, index) => {
+    if (!STATEMENT_TYPES.has(item.type)) fail(`Invalid report: report.claimLedger[${index}].type is not an allowed evidence class.`);
+    if (!CLAIM_STATUSES.has(item.status)) fail(`Invalid report: report.claimLedger[${index}].status is not an allowed claim status.`);
     requireArray(item.sourceIds, `report.claimLedger[${index}].sourceIds`);
     item.sourceIds.forEach((value, valueIndex) => requireString(value, `report.claimLedger[${index}].sourceIds[${valueIndex}]`));
   });
@@ -144,7 +195,7 @@ function validate(data) {
   for (const kind of ["technical", "operational"]) validateItems(report.controls[kind], ["control", "status", "evidence"], `report.controls.${kind}`);
 
   requireRecord(report.remediation, "report.remediation");
-  for (const phase of ["launchBlockers", "beforeLaunch", "postLaunch"]) validateItems(report.remediation[phase], ["action", "owner", "verification"], `report.remediation.${phase}`);
+  for (const phase of ["pciDependencies", "businessLaunchRules", "defenseInDepth"]) validateItems(report.remediation[phase], ["action", "timing", "owner", "verification"], `report.remediation.${phase}`);
   validateItems(report.sources, ["id", "title", "publisher", "url", "retrievedAt"], "report.sources");
 
   const sourceIds = new Set(report.sources.map((source) => source.id));
@@ -159,6 +210,7 @@ function validate(data) {
     }
   }
   rejectSensitiveData(data);
+  rejectProhibitedOverclaims(data);
 }
 
 function list(items, className = "prose-list") {
@@ -208,7 +260,18 @@ function renderReport(report) {
     assessmentType: "Assessment",
   };
   const metadata = Object.entries(assessmentLabels).map(([key, label]) => `<div><dt class="meta-label">${label}</dt><dd>${escapeHtml(report.assessment[key])}</dd></div>`).join("");
-  const blockers = report.outcome.launchBlockers.length ? list(report.outcome.launchBlockers) : '<p>No launch blockers identified from the evidence reviewed.</p>';
+  const actionSummary = (items) => items.length ? list(items) : '<p class="print-note">None identified from the evidence reviewed.</p>';
+  const provenanceRows = [
+    ["Assessed source", escapeHtml(report.provenance.assessedSource.commit)],
+    ["Branch", escapeHtml(report.provenance.assessedSource.branch)],
+    ["Worktree", escapeHtml(report.provenance.assessedSource.worktreeState)],
+    ["Source captured", escapeHtml(report.provenance.assessedSource.capturedAt)],
+    ["Exact deployed commit", escapeHtml(report.provenance.deployedRuntime.exactCommitStatus)],
+    ["Runtime evidence", `${badge(report.provenance.deployedRuntime.status)} ${escapeHtml(report.provenance.deployedRuntime.evidence)}`],
+  ];
+  const versionRows = [["Integration scope", escapeHtml(report.inventory.integrationScope)], ["Payment pattern", escapeHtml(report.inventory.paymentPattern)], ["Framework and runtime", escapeHtml(report.inventory.frameworkRuntime)], ["Stripe SDK", escapeHtml(report.inventory.stripeSdk)], ["Stripe API version", escapeHtml(report.inventory.stripeApiVersion)], ["Webhook API version", escapeHtml(report.inventory.webhookApiVersion)], ["Version evidence", escapeHtml(report.inventory.versionEvidence)], ["Upgrade/drift assessment", escapeHtml(report.inventory.upgradeAssessment)]];
+  const scriptRows = report.inventory.paymentPageScripts.map((item) => [escapeHtml(item.party), escapeHtml(item.owner), escapeHtml(item.purpose), escapeHtml(item.source), escapeHtml(item.changeControl), escapeHtml(item.paymentImpact), escapeHtml(item.evidence)]);
+  const providerRows = report.inventory.serviceProviders.map((item) => [escapeHtml(item.provider), escapeHtml(item.role), escapeHtml(item.paymentSecurityImpact), escapeHtml(item.responsibility), badge(item.status), escapeHtml(item.evidence)]);
 
   const findingsRows = report.findings.map((finding) => [
     `<a href="#finding-${slug(finding.id)}">${escapeHtml(finding.id)}</a>`,
@@ -237,7 +300,7 @@ function renderReport(report) {
   ]);
 
   const controlTable = (items) => renderTable(["Control", "Status", "Evidence"], items.map((item) => [escapeHtml(item.control), badge(item.status), escapeHtml(item.evidence)]));
-  const remediationTable = (items) => renderTable(["Action", "Owner", "Verification"], items.map((item) => [escapeHtml(item.action), escapeHtml(item.owner), escapeHtml(item.verification)]));
+  const remediationTable = (items) => renderTable(["Action", "Timing", "Owner", "Verification"], items.map((item) => [escapeHtml(item.action), escapeHtml(item.timing), escapeHtml(item.owner), escapeHtml(item.verification)]));
 
   const sources = report.sources.map((source) => `<li id="source-${slug(source.id)}"><span class="source-id">${escapeHtml(source.id)}</span><br><strong>${escapeHtml(source.title)}</strong><br>${escapeHtml(source.publisher)} · Retrieved ${escapeHtml(source.retrievedAt)}<br><a href="${escapeHtml(source.url)}">${escapeHtml(source.url)}</a></li>`).join("");
 
@@ -255,7 +318,9 @@ function renderReport(report) {
       <div class="outcome-grid">
         <div><span class="meta-label">Raw card-data exposure</span><p>${escapeHtml(report.outcome.rawCardDataExposure)}</p></div>
         <div><span class="meta-label">Most important uncertainty</span><p>${escapeHtml(report.outcome.keyUncertainty)}</p></div>
-        <div style="grid-column: 1 / -1"><span class="meta-label">Launch blockers</span>${blockers}</div>
+            <div><span class="meta-label">PCI obligations and validation dependencies</span>${actionSummary(report.outcome.pciDependencies)}</div>
+            <div><span class="meta-label">Business launch rules</span>${actionSummary(report.outcome.businessLaunchRules)}</div>
+            <div style="grid-column: 1 / -1"><span class="meta-label">Defence-in-depth hardening</span>${actionSummary(report.outcome.defenseInDepth)}</div>
       </div>
     </div>
   </section>
@@ -265,26 +330,30 @@ function renderReport(report) {
     <div class="split"><div class="subsection"><h3>Included</h3>${list(report.scope.included)}</div><div class="subsection"><h3>Excluded</h3>${list(report.scope.excluded)}</div></div>
     <div class="subsection" style="margin-top: 2rem"><h3>Methodology</h3>${list(report.scope.methodology)}</div>
   </section>
+  <section aria-labelledby="assessment-provenance">${sectionHeading(4, "assessment-provenance", "Assessment provenance")}${renderTable(["Record", "Value"], provenanceRows)}</section>
+  <section aria-labelledby="integration-inventory">${sectionHeading(5, "integration-inventory", "Integration and version inventory")}${renderTable(["Record", "Value"], versionRows)}</section>
+  <section aria-labelledby="payment-page-scripts">${sectionHeading(6, "payment-page-scripts", "Payment-page script inventory")}${renderTable(["Party", "Owner", "Purpose", "Source", "Change control", "Payment impact", "Evidence"], scriptRows)}</section>
+  <section aria-labelledby="service-providers">${sectionHeading(7, "service-providers", "Service-provider responsibilities")}${renderTable(["Provider", "Role", "Payment-security impact", "Responsibility", "Status", "Evidence"], providerRows)}</section>
   <section aria-labelledby="card-data-flow">
-    ${sectionHeading(4, "card-data-flow", "Architecture and card-data flow")}
+    ${sectionHeading(8, "card-data-flow", "Architecture and card-data flow")}
     <ol class="flow">${report.paymentFlow.map((item) => `<li><span class="flow__step">${item.step}</span><div><h3>${escapeHtml(item.actor)}</h3><p>${escapeHtml(item.action)}</p><div class="evidence">${escapeHtml(item.evidence)}</div></div></li>`).join("")}</ol>
   </section>
-  <section aria-labelledby="findings-summary">${sectionHeading(5, "findings-summary", "Findings summary")}${renderTable(["Reference", "Finding", "Severity", "Status"], findingsRows)}</section>
-  <section aria-labelledby="detailed-findings">${sectionHeading(6, "detailed-findings", "Detailed findings")}${findings || '<p>No findings were provided.</p>'}</section>
-  <section aria-labelledby="claim-ledger">${sectionHeading(7, "claim-ledger", "Claim ledger")}${renderTable(["Reference", "Claim", "Type", "Status", "Evidence or qualification", "Sources"], ledgerRows)}</section>
+  <section aria-labelledby="findings-summary">${sectionHeading(9, "findings-summary", "Findings summary")}${renderTable(["Reference", "Finding", "Severity", "Status"], findingsRows)}</section>
+  <section aria-labelledby="detailed-findings">${sectionHeading(10, "detailed-findings", "Detailed findings")}${findings || '<p>No findings were provided.</p>'}</section>
+  <section aria-labelledby="claim-ledger">${sectionHeading(11, "claim-ledger", "Claim ledger")}${renderTable(["Reference", "Claim", "Type", "Status", "Evidence or qualification", "Sources"], ledgerRows)}</section>
   <section aria-labelledby="controls">
-    ${sectionHeading(8, "controls", "Technical and operational controls")}
+    ${sectionHeading(12, "controls", "Technical and operational controls")}
     <div class="subsection"><h3>Technical controls</h3>${controlTable(report.controls.technical)}</div>
     <div class="subsection" style="margin-top: 2rem"><h3>Operational controls</h3>${controlTable(report.controls.operational)}</div>
   </section>
   <section aria-labelledby="remediation">
-    ${sectionHeading(9, "remediation", "Prioritised remediation")}
-    <div class="subsection"><h3>Launch blockers</h3>${remediationTable(report.remediation.launchBlockers)}</div>
-    <div class="subsection" style="margin-top: 2rem"><h3>Before launch</h3>${remediationTable(report.remediation.beforeLaunch)}</div>
-    <div class="subsection" style="margin-top: 2rem"><h3>Post-launch hardening</h3>${remediationTable(report.remediation.postLaunch)}</div>
+    ${sectionHeading(13, "remediation", "Prioritised remediation")}
+    <div class="subsection"><h3>PCI obligations and validation dependencies</h3>${remediationTable(report.remediation.pciDependencies)}</div>
+    <div class="subsection" style="margin-top: 2rem"><h3>Business launch rules</h3>${remediationTable(report.remediation.businessLaunchRules)}</div>
+    <div class="subsection" style="margin-top: 2rem"><h3>Defence-in-depth hardening</h3>${remediationTable(report.remediation.defenseInDepth)}</div>
   </section>
-  <section aria-labelledby="unknowns">${sectionHeading(10, "unknowns", "Residual unknowns")}${list(report.unknowns)}</section>
-  <section aria-labelledby="sources">${sectionHeading(11, "sources", "Sources")}<ol class="source-list">${sources}</ol></section>
+  <section aria-labelledby="unknowns">${sectionHeading(14, "unknowns", "Residual unknowns")}${list(report.unknowns)}</section>
+  <section aria-labelledby="sources">${sectionHeading(15, "sources", "Sources")}<ol class="source-list">${sources}</ol></section>
   <p class="disclaimer">${escapeHtml(report.disclaimer)}</p>
   <p class="print-note">This self-contained report was generated locally. It does not load external scripts, styles, fonts or images.</p>`;
 }
@@ -292,6 +361,7 @@ function renderReport(report) {
 function renderTableOfContents() {
   const sections = [
     ["preliminary-outcome", "Preliminary outcome"], ["executive-summary", "Executive summary"], ["scope-methodology", "Scope and methodology"],
+    ["assessment-provenance", "Assessment provenance"], ["integration-inventory", "Integration and versions"], ["payment-page-scripts", "Payment-page scripts"], ["service-providers", "Service providers"],
     ["card-data-flow", "Card-data flow"], ["findings-summary", "Findings summary"], ["detailed-findings", "Detailed findings"],
     ["claim-ledger", "Claim ledger"], ["controls", "Controls"], ["remediation", "Remediation"], ["unknowns", "Residual unknowns"], ["sources", "Sources"],
   ];

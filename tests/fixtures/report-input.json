@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "report": {
     "title": "Stripe PCI readiness assessment",
     "subject": "Example Store",
@@ -10,12 +10,80 @@
       "environment": "Production",
       "assessmentType": "Read-only repository and deployed-runtime review"
     },
+    "provenance": {
+      "assessedSource": {
+        "commit": "abc1234",
+        "branch": "main",
+        "worktreeState": "Clean",
+        "capturedAt": "2026-09-02T10:20:00+10:00",
+        "evidence": "git rev-parse HEAD and git status --short captured during the review."
+      },
+      "deployedRuntime": {
+        "status": "Partly verified",
+        "exactCommitStatus": "Not verified",
+        "evidence": "Production response headers were observed; no build identifier established equivalence with abc1234."
+      }
+    },
+    "inventory": {
+      "integrationScope": "web-ecommerce",
+      "paymentPattern": "Individual Stripe Elements with a server-created PaymentIntent",
+      "frameworkRuntime": "Next.js 16.3.1; Node.js 20.19+",
+      "stripeSdk": "stripe 22.5.0; @stripe/stripe-js 9.14.0",
+      "stripeApiVersion": "Not explicitly pinned in source; requires Stripe Dashboard/API evidence",
+      "webhookApiVersion": "Not verified from the deployed endpoint configuration",
+      "versionEvidence": "package.json and package-lock.json reviewed at abc1234.",
+      "upgradeAssessment": "Test PaymentIntent and webhook behaviour against the effective Stripe API and endpoint versions before SDK or API upgrades.",
+      "paymentPageScripts": [
+        {
+          "party": "First-party",
+          "owner": "Example Store engineering",
+          "purpose": "Checkout UI and order orchestration",
+          "source": "Application bundle loaded from the assessed deployment",
+          "changeControl": "Repository review and CI evidence not independently verified",
+          "paymentImpact": "Can affect the page that initiates payment",
+          "evidence": "Source review and runtime header observation R-01"
+        },
+        {
+          "party": "Third-party",
+          "owner": "Stripe",
+          "purpose": "Hosted payment fields",
+          "source": "Stripe.js and Stripe-controlled frames",
+          "changeControl": "Stripe-managed; merchant CSP and domain configuration require separate review",
+          "paymentImpact": "Collects card data outside merchant application code",
+          "evidence": "Runtime DOM observation R-02"
+        }
+      ],
+      "serviceProviders": [
+        {
+          "provider": "Stripe",
+          "role": "Payment service provider",
+          "paymentSecurityImpact": "Processes payment data and controls hosted payment fields",
+          "responsibility": "Confirm current service-provider evidence and merchant validation path",
+          "status": "Requires accepting-entity confirmation",
+          "evidence": "Merchant assertion M-01"
+        },
+        {
+          "provider": "Self-hosted CI runner",
+          "role": "Build and deployment execution",
+          "paymentSecurityImpact": "Can alter checkout code and deployment artefacts",
+          "responsibility": "Verify runner patching, isolation, workflow permissions, secret handling and cleanup",
+          "status": "Not verified",
+          "evidence": "Repository workflow review L-02"
+        }
+      ]
+    },
     "outcome": {
       "classification": "Likely SAQ A candidate",
       "confidence": "Moderate",
       "rawCardDataExposure": "Raw card data does not appear able to touch merchant systems based on the evidence reviewed.",
-      "launchBlockers": [
+      "pciDependencies": [
         "Confirm the final validation pathway with the compliance-accepting entity."
+      ],
+      "businessLaunchRules": [
+        "Confirm the merchant's accepted card brands and checkout configuration."
+      ],
+      "defenseInDepth": [
+        "Protect the deployment branch and document self-hosted runner controls."
       ],
       "keyUncertainty": "Operational access controls were described by the merchant but were not independently verified."
     },
@@ -120,23 +188,26 @@
       ]
     },
     "remediation": {
-      "launchBlockers": [
+      "pciDependencies": [
         {
-          "action": "Confirm the validation pathway",
+          "action": "Confirm the validation pathway and ASV applicability; do not describe an ASV as paid.",
+          "timing": "Before accepting live payments",
           "owner": "Merchant",
           "verification": "Written confirmation from the compliance-accepting entity"
         }
       ],
-      "beforeLaunch": [
+      "businessLaunchRules": [
         {
-          "action": "Complete the operational control evidence register",
+          "action": "Verify configured card-brand acceptance against the approved business policy",
+          "timing": "Before launch",
           "owner": "Merchant",
-          "verification": "Dated evidence is linked for every applicable control"
+          "verification": "Stripe configuration evidence and successful sandbox test"
         }
       ],
-      "postLaunch": [
+      "defenseInDepth": [
         {
-          "action": "Review failed webhook deliveries",
+          "action": "Review self-hosted runner and failed webhook monitoring",
+          "timing": "Before launch and monthly thereafter",
           "owner": "Engineering",
           "verification": "Alert and response evidence from the first month of operation"
         }

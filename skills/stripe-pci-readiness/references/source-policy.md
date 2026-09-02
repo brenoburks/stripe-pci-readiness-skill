@@ -87,7 +87,10 @@ Do not state or imply without specific current applicable evidence:
 - “Stripe confirms this integration meets the script-attack eligibility criterion” without the exact Stripe document, solution, and conditions.
 - A universal number of SAQ questions, remediation duration, assessor requirement, or compliance cost.
 - That an empty DOM container, Stripe.js call, database schema search, framework setting, or successful payment alone proves the entire payment flow and environment.
+- That reviewed source is the deployed runtime without a build identifier, deployment record, or equivalent evidence.
+- That source-code absence proves raw card data is absent from runtime telemetry, reverse proxies, queues, analytics, support tools, exports, or backups.
 - That a report-only CSP enforces a control, or that one generic CSP allowlist is sufficient for every Stripe integration.
+- That a passing or approved ASV report is a “paid ASV”, or that a business policy is a PCI obligation without an applicable authority.
 
 ## Citation rules
 
@@ -108,8 +111,14 @@ Retrieved 2 September 2026. Verify again during each audit.
 - [PCI SSC — January 2025 SAQ A update](https://blog.pcisecuritystandards.org/important-updates-announced-for-merchants-validating-to-self-assessment-questionnaire-a) — explains removal of Requirements 6.4.3, 11.6.1, and 12.3.1 from SAQ A and addition of an eligibility criterion concerning script attacks; it does not say embedded iframes first became SAQ A-eligible in 2025.
 - [PCI SSC document library](https://www.pcisecuritystandards.org/document_library/) — retrieve the current PCI DSS and applicable SAQ rather than copying an old questionnaire into the skill.
 - [PCI SSC approved scanning vendors](https://www.pcisecuritystandards.org/assessors_and_solutions/approved_scanning_vendors/) — authoritative vendor list for an ASV scan.
+- [PCI SSC FAQ 1312 — managing service-provider responsibilities](https://www.pcisecuritystandards.org/faqs/1312/) — use to identify and maintain responsibility evidence for relevant service providers.
+- [PCI SSC FAQ 1579 — service providers that can affect payment security](https://www.pcisecuritystandards.org/faqs/1579/) — use where a provider can impact payment security even without direct account-data handling.
 - [Stripe integration security guide](https://docs.stripe.com/security/guide) — official guidance on secure payment-data collection and PCI responsibility.
+- [Stripe Elements](https://docs.stripe.com/payments/elements) — current hosted-field and browser integration reference for Elements-based web e-commerce.
+- [Stripe PaymentIntents](https://docs.stripe.com/payments/payment-intents) — current server/payment-state reference for PaymentIntent integrations.
+- [Stripe Express Checkout Element](https://docs.stripe.com/elements/express-checkout-element) — current wallet/Express Checkout reference when that element is detected.
 - [Stripe webhook documentation](https://docs.stripe.com/webhooks) — official guidance for signature verification, raw request bodies, duplicate events, ordering, retries, and endpoint behaviour.
+- [Stripe API versioning](https://docs.stripe.com/api/versioning?lang=node) and [webhook versioning](https://docs.stripe.com/webhooks/versioning) — identify API/SDK/event-version drift and test upgrade behaviour.
 - [Stripe API key best practices](https://docs.stripe.com/keys-best-practices) — official key storage, restriction, access, and rotation guidance.
 
 For Stripe service-provider status or an Attestation of Compliance, obtain the current evidence through Stripe’s official compliance channels and record the exact artifact and validity period. Do not infer it from a generic documentation page.

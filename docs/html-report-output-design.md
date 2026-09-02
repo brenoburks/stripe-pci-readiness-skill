@@ -26,7 +26,7 @@ These references inform report structure only. PCI requirements and Stripe claim
 
 The HTML document has two reading speeds:
 
-1. An opening summary shows preliminary classification, confidence, apparent raw card-data exposure, launch blockers and the most important uncertainty.
+1. An opening summary shows preliminary classification, confidence, apparent raw card-data exposure, PCI validation dependencies, business launch rules, defence-in-depth hardening and the most important uncertainty.
 2. The main document provides scope, methodology, payment flow, findings, claim ledger, controls, remediation, residual unknowns, sources and the non-certification disclaimer.
 
 The report is a light, print-first technical dossier. It uses semantic HTML, native system fonts and no external resources. Desktop uses a constrained document column with an adjacent table of contents when space permits. Mobile preserves the same section order in one column. Print removes navigation, uses economical colour and exposes source destinations.
@@ -48,29 +48,34 @@ The generated file is portable and can be opened directly in a browser, attached
 ## Required sections
 
 1. Report identity and assessment metadata
-2. Preliminary outcome
+2. Preliminary outcome, with separate PCI dependencies, business rules and defence-in-depth items
 3. Executive summary
 4. Scope and methodology
-5. Architecture and card-data flow
-6. Findings summary
-7. Detailed findings
-8. Claim ledger
-9. Technical and operational controls
-10. Prioritised remediation
-11. Residual unknowns
-12. Sources
-13. Non-certification disclaimer
+5. Assessed-source and deployed-runtime provenance
+6. Integration and version inventory
+7. Payment-page script inventory
+8. Service-provider responsibilities
+9. Architecture and card-data flow
+10. Findings summary
+11. Detailed findings
+12. Claim ledger
+13. Technical and operational controls
+14. Prioritised remediation
+15. Residual unknowns
+16. Sources
+17. Non-certification disclaimer
 
 ## Data and safety controls
 
 - Every user-provided value is HTML escaped.
-- Input is structurally validated before output is written.
+- Input is structurally validated before output is written. Version 2 requires source/runtime provenance, integration/version records, payment-page scripts, service-provider responsibilities, and separated remediation classes.
 - Likely Stripe secret keys, webhook signing secrets, complete payment card numbers and CVC values are rejected.
 - Masked last-four references remain allowed when they contain no complete account number.
 - The renderer never fetches remote assets or sends report content over the network.
 - Invalid input exits non-zero and does not leave a partial report file.
 - Severity and status use text labels; colour is supplementary.
 - Missing fields remain visibly `Not verified` or `Not provided`, never an inferred pass.
+- The renderer rejects known overclaims such as certification language and “paid ASV”. This is a deterministic safety rail, not a PCI conclusion engine.
 
 ## Failure and fallback behaviour
 

@@ -1,8 +1,10 @@
 # Stripe PCI Readiness Skill
 
-A portable Agent Skill for evidence-led technical reviews of repositories and deployed applications that accept online payments through Stripe.
+A portable Agent Skill for evidence-led technical reviews of **Stripe web-ecommerce** repositories and deployed checkouts.
 
 It helps developers trace card-data flow, identify likely PCI DSS scope, review Stripe integration controls, and distinguish repository evidence from operational evidence still required from the merchant. It does **not** certify PCI compliance, complete an SAQ, replace an Approved Scanning Vendor, or make the final scope decision for an acquirer or other compliance-accepting entity.
+
+It is designed for browser-based Checkout, embedded Checkout, Payment Element, individual Elements, Express Checkout, PaymentIntents and webhooks. It deliberately routes Stripe Connect, Terminal/card-present, native mobile, MOTO/manual-entry, Payment Links/hosted-only, subscriptions/invoices/Customer Portal, SetupIntents/saved methods, multi-account/entity, and non-payment Stripe products to a specialist review rather than pretending one web checklist fits every Stripe implementation.
 
 ## What makes this skill strict
 
@@ -50,10 +52,12 @@ The report leads with:
 
 - preliminary scope classification and confidence;
 - whether raw card data appears able to touch merchant systems;
-- launch blockers;
+- PCI validation dependencies, business launch rules, and defence-in-depth hardening;
 - the most important unresolved uncertainty.
 
 It then documents the payment flow, severity-ranked findings, a sourced claim ledger, likely validation pathway, technical and operational controls, prioritised remediation, and residual unknowns. Every report ends with a non-certification disclaimer.
+
+Every v2 HTML report also makes source-versus-runtime provenance explicit, including whether the assessed source commit is proven to be deployed. It inventories effective SDK/API/webhook versions and upgrade drift, payment-page scripts, and service-provider responsibilities—including systems such as CDNs, hosts and self-hosted CI runners that can affect payment security. PCI dependencies, business launch rules, and defence-in-depth hardening are intentionally separate.
 
 ### Professional HTML output
 
@@ -81,7 +85,13 @@ Starting authorities include:
 - [PCI SSC FAQ 1588](https://www.pcisecuritystandards.org/faqs/1588/)
 - [PCI SSC FAQ 1604](https://www.pcisecuritystandards.org/faqs/1604/)
 - [PCI SSC merchant website scope FAQ](https://www.pcisecuritystandards.org/faqs/is-a-merchant-website-still-in-scope-for-pci-dss-if-it-meets-all-the-criteria-for-saq-a/)
+- [PCI SSC FAQ 1312](https://www.pcisecuritystandards.org/faqs/1312/)
+- [PCI SSC FAQ 1579](https://www.pcisecuritystandards.org/faqs/1579/)
 - [Stripe integration security guide](https://docs.stripe.com/security/guide)
+- [Stripe Elements](https://docs.stripe.com/payments/elements)
+- [Stripe PaymentIntents](https://docs.stripe.com/payments/payment-intents)
+- [Stripe Express Checkout Element](https://docs.stripe.com/elements/express-checkout-element)
+- [Stripe API versioning](https://docs.stripe.com/api/versioning?lang=node)
 - [Stripe webhook documentation](https://docs.stripe.com/webhooks)
 - [Stripe API key best practices](https://docs.stripe.com/keys-best-practices)
 
@@ -95,7 +105,7 @@ Run:
 npm test
 ```
 
-The dependency-free test suite checks the HTML renderer, output safety, structure, frontmatter, local links, source-policy integration, public governance files, and likely committed Stripe secrets. It does not prove that an agent will reason correctly.
+The dependency-free test suite checks the HTML renderer, output safety, v2 provenance/inventory/action structure, prohibited overclaims, frontmatter, local links, source-policy integration, public governance files, and likely committed Stripe secrets. It includes safe web-Elements, unsafe raw-card, and out-of-scope non-web fixtures. It does not prove that an agent will reason correctly or replace independently scored agent evaluations.
 
 The sanitised [misleading assessment fixture](tests/fixtures/misleading-saq-a-assessment.md) and its separate [human scoring rubric](tests/fixtures/misleading-saq-a-assessment.expected.md) support behavioural evaluation without leaking the expected answer into the test input.
 
@@ -106,6 +116,7 @@ The sanitised [misleading assessment fixture](tests/fixtures/misleading-saq-a-as
 - A technically sound Stripe integration does not by itself establish PCI compliance.
 - Final SAQ and merchant-level decisions belong to the entity accepting the merchant’s validation.
 - Cross-agent behaviour varies and should be tested before relying on the skill for a formal process.
+- The renderer’s deterministic checks prevent known overclaims and missing evidence records; they cannot determine that an agent found every relevant control.
 - This is not legal advice.
 
 ## Contributing and security

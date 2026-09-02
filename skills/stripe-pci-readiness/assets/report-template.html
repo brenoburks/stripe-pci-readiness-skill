@@ -197,9 +197,10 @@
       .report-meta { grid-template-columns: 1fr; }
       .section-heading { grid-template-columns: 2rem minmax(0, 1fr); }
       .finding__header { grid-template-columns: 1fr; }
+      .status { white-space: normal; overflow-wrap: anywhere; }
       .table-wrap { overflow: visible; border-top: 0; }
       table, tbody, tr, td { display: block; width: 100%; }
-      thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+      thead { display: none; }
       tr { border-top: 2px solid var(--ink); padding: var(--space-2) 0; }
       td { display: grid; grid-template-columns: minmax(7.5rem, 38%) minmax(0, 1fr); gap: var(--space-3); border-bottom: 1px solid var(--rule); padding: var(--space-3) 0; }
       td::before { content: attr(data-label); color: var(--ink-muted); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }

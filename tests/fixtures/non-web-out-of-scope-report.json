@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 2,
+  "report": {
+    "title": "Non-web Stripe fixture",
+    "subject": "Example Terminal deployment",
+    "generatedAt": "2026-09-02T10:30:00+10:00",
+    "assessment": { "repository": "example/terminal", "commit": "terminal123", "environment": "Repository", "assessmentType": "Routing review" },
+    "provenance": {
+      "assessedSource": { "commit": "terminal123", "branch": "main", "worktreeState": "Clean", "capturedAt": "2026-09-02T10:20:00+10:00", "evidence": "git evidence" },
+      "deployedRuntime": { "status": "Not verified", "exactCommitStatus": "Not verified", "evidence": "No web runtime is in scope" }
+    },
+    "inventory": {
+      "integrationScope": "out-of-current-skill-scope",
+      "paymentPattern": "Stripe Terminal card-present integration",
+      "frameworkRuntime": "Native point-of-sale application",
+      "stripeSdk": "Terminal SDK observed",
+      "stripeApiVersion": "Not assessed by this web-ecommerce skill",
+      "webhookApiVersion": "Not assessed by this web-ecommerce skill",
+      "versionEvidence": "package manifest",
+      "upgradeAssessment": "Route to a card-present/Terminal-specific review.",
+      "paymentPageScripts": [],
+      "serviceProviders": [{ "provider": "Stripe", "role": "Card-present payment provider", "paymentSecurityImpact": "Terminal payment path", "responsibility": "Use a Terminal-specific compliance assessment", "status": "Not assessed", "evidence": "package manifest" }]
+    },
+    "outcome": {
+      "classification": "Out of scope — specialist Stripe integration",
+      "confidence": "High",
+      "rawCardDataExposure": "Not assessed by this web-ecommerce skill.",
+      "pciDependencies": ["Use a Terminal-specific assessment."],
+      "businessLaunchRules": [],
+      "defenseInDepth": [],
+      "keyUncertainty": "Terminal hardware and card-present operations were not assessed."
+    },
+    "executiveSummary": ["This repository is routed out of the web-ecommerce skill."],
+    "scope": { "included": ["Integration routing"], "excluded": ["Terminal device and card-present operation"], "methodology": ["Repository product detection"] },
+    "paymentFlow": [],
+    "findings": [],
+    "claimLedger": [{ "id": "CL-ROUTE", "claim": "The detected payment pattern is card-present.", "type": "Technical observation", "status": "Supported", "evidence": "package manifest", "sourceIds": ["SRC-STRIPE-TERMINAL"] }],
+    "controls": { "technical": [], "operational": [] },
+    "remediation": { "pciDependencies": [{ "action": "Route to a Terminal review.", "timing": "Before relying on this assessment", "owner": "Merchant", "verification": "Terminal-specific review record" }], "businessLaunchRules": [], "defenseInDepth": [] },
+    "unknowns": ["Terminal device configuration."],
+    "sources": [{ "id": "SRC-STRIPE-TERMINAL", "title": "Stripe Terminal", "publisher": "Stripe", "url": "https://docs.stripe.com/terminal", "retrievedAt": "2026-09-02" }],
+    "disclaimer": "This is a technical PCI-readiness assessment, not certification or legal advice."
+  }
+}
