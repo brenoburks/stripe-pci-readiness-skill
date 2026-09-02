@@ -19,6 +19,8 @@ The skill does not certify PCI compliance, complete an SAQ, replace an Approved 
 5. **Provider-neutral packaging.** One canonical Agent Skills implementation works across supported harnesses without embedding instructions for a single model vendor.
 6. **Current authoritative guidance.** Time-sensitive PCI and Stripe conclusions must be checked against official Stripe and PCI Security Standards Council material during each audit.
 7. **Hosting neutrality.** Heroku, VPS, serverless, container platforms, SQLite, Postgres, and other implementation choices are evidence, not automatic scope decisions.
+8. **No source, no compliance claim.** Every material compliance conclusion must be traceable to a current, applicable primary source. If that source cannot be verified, the conclusion is reported as `not verified` or `requires accepting-entity confirmation`.
+9. **Contradictory evidence is actively sought.** Before classifying scope or obligations, the audit must check for current primary-source guidance that could disprove or qualify the proposed conclusion.
 
 ## Intended users and use cases
 
@@ -64,10 +66,13 @@ stripe-pci-readiness-skill/
 │   └── stripe-pci-readiness/
 │       ├── SKILL.md
 │       ├── references/
-│       │   └── audit-checklist.md
+│       │   ├── audit-checklist.md
+│       │   └── source-policy.md
 │       └── assets/
 │           └── copy-paste-prompt.md
 ├── tests/
+│   ├── fixtures/
+│   │   └── misleading-saq-a-assessment.md
 │   └── validate-skill.mjs
 └── .github/
     └── workflows/
@@ -109,6 +114,41 @@ Frontmatter uses portable Agent Skills fields only. The skill name is `stripe-pc
 - severity definitions and the boundary between PCI requirements and ordinary security hardening.
 
 The reference links to current primary sources instead of copying the PCI DSS standard.
+
+### Source policy
+
+`references/source-policy.md` makes evidence quality part of the audit contract.
+
+The source hierarchy is:
+
+1. **Normative primary sources:** current PCI SSC standards, SAQs, FAQs, and official program material; official Stripe security and product documentation; official payment-brand or acquiring-bank rules; and legislation or regulator material for legal and privacy claims.
+2. **Qualified secondary sources:** QSA, ASV, or reputable specialist commentary may explain context but cannot override or substitute for a normative primary source.
+3. **Non-authoritative material:** blogs, forums, generated summaries, search-result snippets, and prior audit reports may identify questions but are not evidence for a compliance conclusion.
+
+For PCI requirements, the current applicable PCI SSC publication takes precedence. For Stripe product behaviour, current official Stripe documentation takes precedence. The merchant's compliance-accepting entity retains the final determination of the applicable validation method. When authoritative sources conflict or applicability remains ambiguous, the report describes the conflict and does not silently choose the more convenient interpretation.
+
+Every material or time-sensitive conclusion has a claim-ledger entry containing:
+
+- the claim and its classification as normative requirement, technical observation, inference, recommendation, unknown, or merchant assertion;
+- source title, issuing body, direct URL, publication or revision date when available, and retrieval date;
+- applicable PCI DSS, SAQ, Stripe API, or product version;
+- repository file and line, runtime observation, merchant evidence, or external authority supporting it;
+- confidence and unresolved limitations;
+- the result of a counter-evidence check.
+
+Inline citations appear beside the claims they support. A bibliography alone is not sufficient. Repository findings cite exact files and lines; runtime findings identify the checked environment and observation time. Source validity does not prove that a control is implemented in the audited environment.
+
+When internet access or a current primary source is unavailable, the audit may record repository observations but must not present time-sensitive obligations as current fact. It records them as `not verified` and lists the exact source or accepting-entity confirmation still required.
+
+The initial authoritative baseline includes:
+
+- PCI SSC FAQ 1604, *Do ASV scans in SAQ A apply to merchants with webpages that redirect to TPSPs or include TPSPs’ embedded iframes?* (June 2026): <https://www.pcisecuritystandards.org/faqs/1604/>
+- PCI SSC FAQ 1588 on SAQ A eligibility and protection from script attacks: <https://www.pcisecuritystandards.org/faqs/1588/>
+- PCI SSC guidance on merchant website scope when SAQ A criteria are met: <https://www.pcisecuritystandards.org/faqs/is-a-merchant-website-still-in-scope-for-pci-dss-if-it-meets-all-the-criteria-for-saq-a/>
+- PCI SSC's January 2025 SAQ A update: <https://blog.pcisecuritystandards.org/important-updates-announced-for-merchants-validating-to-self-assessment-questionnaire-a>
+- Stripe's security integration guide: <https://docs.stripe.com/security/guide>
+
+These links are a maintained starting point, not a frozen substitute for checking current publications during an audit.
 
 ### Standalone prompt
 
@@ -160,6 +200,24 @@ It then provides:
 6. remediation grouped into launch blockers, before launch, and post-launch hardening;
 7. residual unknowns and exact questions that could change scope.
 
+Each material finding distinguishes the following evidence classes instead of blending them into one conclusion:
+
+- **Normative requirement:** supported by a current applicable authority.
+- **Technical observation:** directly established from repository or runtime evidence.
+- **Inference:** reasoned from evidence but not directly proven.
+- **Merchant assertion:** supplied by the operator and not independently verified.
+- **Recommendation:** a proposed risk treatment, not itself a compliance obligation.
+- **Unknown:** evidence was absent, inaccessible, contradictory, or stale.
+
+The report must not state or imply any of the following without specific, current, applicable evidence:
+
+- that SAQ A merchants do not require quarterly ASV scans;
+- that a merchant web server is out of PCI scope solely because PAN does not reach it;
+- that a merchant definitively qualifies for SAQ A, SAQ A-EP, SAQ D, or a particular merchant level;
+- that a merchant is compliant, substantially compliant, certified, or audit-ready;
+- that Stripe supplies a particular eligibility confirmation unless the exact Stripe document, product, and conditions are identified;
+- a precise remediation duration, questionnaire length, or assessor requirement presented as universal fact.
+
 Every report ends with the required disclaimer:
 
 > This is a technical PCI-readiness assessment, not certification or legal advice.
@@ -173,6 +231,8 @@ Every report ends with the required disclaimer:
 - If a deployed environment is unavailable, the report continues with repository evidence and marks runtime checks unverified.
 - If current official guidance conflicts with the bundled checklist, the official guidance wins and the discrepancy is reported as skill maintenance work.
 - If the agent lacks a needed tool, it degrades explicitly rather than inventing a passing result.
+- If a primary source is inaccessible, stale, internally inconsistent, or unclear about the audited integration, the associated result fails closed to `not verified`.
+- Generated or user-supplied reports are treated as claims to test, not authorities to repeat.
 
 ## Validation strategy
 
@@ -187,6 +247,10 @@ The repository uses a dependency-free Node.js validation script. It verifies:
 - the required non-certification disclaimer exists;
 - wording does not make prohibited certification claims;
 - the standalone prompt retains read-only, redaction, authoritative-source, and ASV boundaries.
+- `SKILL.md`, the checklist, and the standalone prompt all link to and enforce `source-policy.md`;
+- prohibited unsupported statements are absent from normative guidance;
+- every bundled external compliance assertion has an adjacent primary-source citation;
+- local references resolve and the regression fixture remains present.
 
 GitHub Actions runs validation on pushes and pull requests using a pinned current LTS Node major. The workflow receives no secrets and requires read-only repository permissions.
 
@@ -198,6 +262,19 @@ Manual release checks verify the skill against at least three fixture patterns:
 
 Fixture audits verify behavioural outcomes, not exact prose. They must show that the skill distinguishes likely scope, cites evidence, redacts sensitive values, and refuses to certify compliance.
 
+A fourth, sanitised regression fixture contains a plausible but misleading SAQ A assessment. It must include enough claims to verify that the skill detects and corrects, with primary sources:
+
+- the false universal claim that SAQ A requires no quarterly ASV scans;
+- the unsupported conclusion that the merchant web server is out of scope merely because Stripe hosts card fields;
+- a definitive SAQ or merchant-level classification made without accepting-entity evidence;
+- a historically incorrect explanation of when embedded iframes became eligible for SAQ A;
+- a misreading of the current script-attack eligibility criterion;
+- incomplete CSP guidance presented as universally sufficient;
+- repository observations overstated as proof about runtime, logs, backups, or the full payment flow;
+- confident effort estimates or claims that only one or two compliance tasks remain.
+
+The fixture contains no names, credentials, customer data, or implementation details from The Grey Space Project or any third party. The initial release uses it as a documented forward-evaluation case rather than asserting that deterministic linting can prove model behaviour.
+
 ## Documentation and governance
 
 The README includes purpose, non-affiliation notice, supported harnesses, installation, invocation, example output shape, limitations, authoritative sources, and contribution guidance.
@@ -205,6 +282,10 @@ The README includes purpose, non-affiliation notice, supported harnesses, instal
 `SECURITY.md` provides private vulnerability-reporting instructions using GitHub's private vulnerability reporting feature when available. It tells reporters not to submit real payment credentials or customer data.
 
 `CONTRIBUTING.md` requires primary-source citations for compliance changes and validation updates when behaviour changes.
+
+Changes to PCI or Stripe conclusions require the contributor to record the authoritative source, applicability, publication or revision date when available, retrieval date, and any superseded guidance. Secondary-source-only compliance changes are rejected. Maintainers perform a source review at least quarterly and issue a patch release promptly when normative guidance changes.
+
+External-link availability checks may run on a schedule or manually so transient network failures do not make ordinary pull requests flaky. Broken or redirected authoritative links block a release until their current official replacement or archived status is documented.
 
 The project uses semantic Git tags. The first public release is `v0.1.0`, signalling that community and cross-harness feedback is still expected. It can move to `v1.0.0` after successful use across the named harnesses.
 
@@ -226,6 +307,10 @@ The existing personal Codex skill may be used as editorial source material, but 
 - No secrets or Grey Space-specific information are present.
 - The audit cannot truthfully be read as certification or a definitive SAQ determination.
 - Current Stripe and PCI SSC sources are cited for time-sensitive conclusions.
+- Every material compliance claim is classified and traceable through the claim ledger.
+- The skill actively checks for contradictory primary evidence and fails closed when current applicability cannot be established.
+- The misleading-assessment regression fixture is present and its expected findings are documented.
+- The skill does not repeat any prohibited unsupported statement as fact.
 - The `v0.1.0` release is installable and includes clear limitations.
 
 ## Deferred work
