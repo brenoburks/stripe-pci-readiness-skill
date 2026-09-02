@@ -36,23 +36,23 @@ The root object contains `schemaVersion: 2` and `report`.
 - `title`, `subject`, `generatedAt`, and the exact `disclaimer` required by `SKILL.md`;
 - `assessment`: repository, commit, environment, and assessment type;
 - `provenance`: assessed-source commit/branch/worktree/capture evidence and separately the deployed-runtime status, evidence, and exact deployed-commit status;
-- `inventory`: web-ecommerce routing result; payment pattern; framework/runtime; Stripe SDK, API and webhook API versions; version evidence and upgrade/drift assessment; first/third/fourth-party script inventory; and service-provider responsibility inventory;
+- `inventory`: web-ecommerce routing result, typed integration category and routed pattern; payment pattern; framework/runtime; Stripe SDK, API and webhook API versions; version evidence and upgrade/drift assessment; first/third/fourth-party script inventory; and service-provider responsibility inventory;
 - `outcome`: preliminary classification, confidence, raw card-data exposure, separate PCI dependencies, business launch rules, defence-in-depth hardening, and the most important uncertainty;
 - `executiveSummary`: concise decision-relevant statements;
 - `scope`: included, excluded, and methodology arrays;
 - `paymentFlow`: numbered actor, action, and evidence records;
-- `findings`: stable ID, title, severity, status, category, statement type, observation, consequence, recommendation, verification method, evidence, and source IDs;
-- `claimLedger`: claim, classification, status, evidence or qualification, and source IDs;
+- `findings`: stable ID, title, severity, status, category, statement type, observation, consequence, recommendation, verification method, confidence, counter-evidence result, evidence, and non-empty source IDs;
+- `claimLedger`: claim, classification, status, evidence or qualification, applicability, counter-evidence result, confidence, and non-empty source IDs;
 - `controls`: separate technical and operational records;
 - `remediation`: PCI obligations/validation dependencies, business launch rules, and defence-in-depth hardening. Each item has action, timing, owner, and verification;
 - `unknowns`: exact unresolved questions or gaps;
-- `sources`: stable ID, title, publisher, HTTPS URL, and retrieval date.
+- `sources`: stable ID, title, publisher, authority, HTTPS URL, retrieval date, applicability, counter-evidence result, and confidence; `versionOrDate` is optional when the issuing authority provides it.
 
-Source IDs referenced by findings or claims must exist in `sources`. Empty or inaccessible evidence must be described as `Not verified` or `Not provided`; it must not be converted into a pass.
+Source IDs referenced by findings or claims must exist in `sources` and cannot be empty. Web-ecommerce reports require non-empty sources and claim ledger. Empty or inaccessible evidence must be described as `Not verified` or `Not provided`; it must not be converted into a pass.
 
 For any routed Stripe pattern, set `inventory.integrationScope` to `out-of-current-skill-scope`, use the exact classification `Out of scope — specialist Stripe integration`, and explain the specialist review required. Do not use the renderer to make a web-ecommerce PCI classification for Connect, Terminal/card-present, native mobile, MOTO/manual entry, Payment Links/hosted-only, or another routed pattern.
 
-The renderer rejects likely certification claims, definitive-SAq language, and “paid ASV” wording. It also requires the provenance, inventory, script, provider, and separate action records above. These deterministic checks prevent known report defects; they do not replace professional judgement or primary-source research.
+The renderer rejects likely certification claims, definitive-SAq language, “paid ASV” wording, Stripe client secrets, incoherent routing, missing material source references, and unknown object properties. It also requires the provenance, inventory, script, provider, and separate action records above. These deterministic checks prevent known report defects; they do not replace professional judgement or primary-source research.
 
 ## Safety behaviour
 

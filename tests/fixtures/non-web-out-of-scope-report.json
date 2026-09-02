@@ -11,6 +11,8 @@
     },
     "inventory": {
       "integrationScope": "out-of-current-skill-scope",
+      "integrationCategory": "routed-specialist",
+      "routedPattern": "terminal-or-card-present",
       "paymentPattern": "Stripe Terminal card-present integration",
       "frameworkRuntime": "Native point-of-sale application",
       "stripeSdk": "Terminal SDK observed",
@@ -34,11 +36,11 @@
     "scope": { "included": ["Integration routing"], "excluded": ["Terminal device and card-present operation"], "methodology": ["Repository product detection"] },
     "paymentFlow": [],
     "findings": [],
-    "claimLedger": [{ "id": "CL-ROUTE", "claim": "The detected payment pattern is card-present.", "type": "Technical observation", "status": "Supported", "evidence": "package manifest", "sourceIds": ["SRC-STRIPE-TERMINAL"] }],
+    "claimLedger": [{ "id": "CL-ROUTE", "claim": "The detected payment pattern is card-present.", "type": "Technical observation", "status": "Supported", "evidence": "package manifest", "applicability": "Used only to route this repository.", "counterEvidence": "No browser checkout was identified.", "confidence": "High", "sourceIds": ["SRC-STRIPE-TERMINAL"] }],
     "controls": { "technical": [], "operational": [] },
     "remediation": { "pciDependencies": [{ "action": "Route to a Terminal review.", "timing": "Before relying on this assessment", "owner": "Merchant", "verification": "Terminal-specific review record" }], "businessLaunchRules": [], "defenseInDepth": [] },
     "unknowns": ["Terminal device configuration."],
-    "sources": [{ "id": "SRC-STRIPE-TERMINAL", "title": "Stripe Terminal", "publisher": "Stripe", "url": "https://docs.stripe.com/terminal", "retrievedAt": "2026-09-02" }],
+    "sources": [{ "id": "SRC-STRIPE-TERMINAL", "title": "Stripe Terminal", "publisher": "Stripe", "authority": "Stripe", "url": "https://docs.stripe.com/terminal", "retrievedAt": "2026-09-02", "applicability": "Used only for routing to a card-present specialist review.", "counterEvidence": "No browser checkout was identified.", "confidence": "High" }],
     "disclaimer": "This is a technical PCI-readiness assessment, not certification or legal advice."
   }
 }

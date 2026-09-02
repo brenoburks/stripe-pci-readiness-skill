@@ -138,6 +138,8 @@ function validateGuidanceContract() {
     "https://docs.stripe.com/security/guide",
     "https://docs.stripe.com/payments/elements",
     "https://docs.stripe.com/payments/payment-intents",
+    "https://docs.stripe.com/payments/checkout",
+    "https://docs.stripe.com/checkout/embedded/quickstart",
   ]) {
     if (!sourcePolicy.includes(url)) fail(`Source policy is missing authoritative baseline: ${url}`);
   }

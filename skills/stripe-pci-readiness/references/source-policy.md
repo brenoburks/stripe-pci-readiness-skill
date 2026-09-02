@@ -114,6 +114,7 @@ Retrieved 2 September 2026. Verify again during each audit.
 - [PCI SSC FAQ 1312 — managing service-provider responsibilities](https://www.pcisecuritystandards.org/faqs/1312/) — use to identify and maintain responsibility evidence for relevant service providers.
 - [PCI SSC FAQ 1579 — service providers that can affect payment security](https://www.pcisecuritystandards.org/faqs/1579/) — use where a provider can impact payment security even without direct account-data handling.
 - [Stripe integration security guide](https://docs.stripe.com/security/guide) — official guidance on secure payment-data collection and PCI responsibility.
+- [Stripe Checkout](https://docs.stripe.com/payments/checkout) and [embedded Checkout](https://docs.stripe.com/checkout/embedded/quickstart) — current checkout references when the payment UI is hosted or embedded Checkout.
 - [Stripe Elements](https://docs.stripe.com/payments/elements) — current hosted-field and browser integration reference for Elements-based web e-commerce.
 - [Stripe PaymentIntents](https://docs.stripe.com/payments/payment-intents) — current server/payment-state reference for PaymentIntent integrations.
 - [Stripe Express Checkout Element](https://docs.stripe.com/elements/express-checkout-element) — current wallet/Express Checkout reference when that element is detected.

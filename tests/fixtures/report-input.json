@@ -26,6 +26,8 @@
     },
     "inventory": {
       "integrationScope": "web-ecommerce",
+      "integrationCategory": "individual-elements",
+      "routedPattern": "not-applicable",
       "paymentPattern": "Individual Stripe Elements with a server-created PaymentIntent",
       "frameworkRuntime": "Next.js 16.3.1; Node.js 20.19+",
       "stripeSdk": "stripe 22.5.0; @stripe/stripe-js 9.14.0",
@@ -132,6 +134,8 @@
         "consequence": "Forged webhook payloads are rejected before order state changes.",
         "recommendation": "Retain this control and monitor verification failures.",
         "verification": "Replay a signed test event and confirm a 2xx response; send a modified signature and confirm rejection.",
+        "confidence": "High; exact source and test evidence were reviewed.",
+        "counterEvidence": "No contrary handler path was identified in the assessed source.",
         "evidence": [
           "src/api/stripe/webhook.ts:18-34",
           "Test result WEBHOOK-01"
@@ -151,6 +155,8 @@
         "consequence": "A sound payment integration alone cannot establish the merchant's overall PCI readiness.",
         "recommendation": "Record owners and evidence for operational controls before formal validation.",
         "verification": "Review dated access records, training evidence and the current incident-response procedure.",
+        "confidence": "High that repository evidence is insufficient; operational systems were not inspected.",
+        "counterEvidence": "No dated operational evidence was supplied during this review.",
         "evidence": [
           "Repository limitation L-01"
         ],
@@ -166,6 +172,9 @@
         "type": "Merchant assertion",
         "status": "Not supported",
         "evidence": "Payment-data flow and the complete eligibility criteria must be assessed.",
+        "applicability": "Applies to the web-ecommerce payment flow under review.",
+        "counterEvidence": "No accepting-entity determination was provided.",
+        "confidence": "High; this is a qualified scope conclusion.",
         "sourceIds": [
           "SRC-PCI-FAQ-1604"
         ]
@@ -222,22 +231,36 @@
         "id": "SRC-PCI-LIBRARY",
         "title": "PCI SSC Document Library",
         "publisher": "PCI Security Standards Council",
+        "authority": "PCI Security Standards Council",
         "url": "https://www.pcisecuritystandards.org/document_library/",
-        "retrievedAt": "2026-09-02"
+        "retrievedAt": "2026-09-02",
+        "versionOrDate": "Current document library at retrieval",
+        "applicability": "Starting authority for current PCI material.",
+        "counterEvidence": "Specific SAQ and accepting-entity pathway remain to be confirmed.",
+        "confidence": "High"
       },
       {
         "id": "SRC-PCI-FAQ-1604",
         "title": "PCI SSC FAQ 1604",
         "publisher": "PCI Security Standards Council",
+        "authority": "PCI Security Standards Council",
         "url": "https://www.pcisecuritystandards.org/faqs/1604/",
-        "retrievedAt": "2026-09-02"
+        "retrievedAt": "2026-09-02",
+        "versionOrDate": "June 2026",
+        "applicability": "Relevant to web e-commerce ASV assessment discussions.",
+        "counterEvidence": "The accepting entity must confirm the merchant's validation path and timing.",
+        "confidence": "High"
       },
       {
         "id": "SRC-STRIPE-WEBHOOKS",
         "title": "Stripe webhook documentation",
         "publisher": "Stripe",
+        "authority": "Stripe",
         "url": "https://docs.stripe.com/webhooks",
-        "retrievedAt": "2026-09-02"
+        "retrievedAt": "2026-09-02",
+        "applicability": "Applies to the Stripe webhook handler reviewed.",
+        "counterEvidence": "Runtime endpoint configuration and live event evidence are recorded separately.",
+        "confidence": "High"
       }
     ],
     "disclaimer": "This is a technical PCI-readiness assessment, not certification or legal advice."

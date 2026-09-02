@@ -11,6 +11,8 @@
     },
     "inventory": {
       "integrationScope": "web-ecommerce",
+      "integrationCategory": "payment-intents-web",
+      "routedPattern": "not-applicable",
       "paymentPattern": "Custom card form posts directly to merchant endpoint",
       "frameworkRuntime": "Example runtime",
       "stripeSdk": "Not applicable to observed capture path",
@@ -33,8 +35,8 @@
     "executiveSummary": ["A custom form can send raw account data to merchant infrastructure."],
     "scope": { "included": ["Custom checkout source"], "excluded": ["Runtime logs"], "methodology": ["Static source review"] },
     "paymentFlow": [{ "step": 1, "actor": "Browser", "action": "Posts card data to merchant route.", "evidence": "src/checkout.js:10" }],
-    "findings": [{ "id": "RAW-001", "title": "Raw card route observed", "severity": "Critical", "status": "Supported", "category": "PCI obligation", "statementType": "Technical observation", "observation": "Raw card data can reach the merchant route.", "consequence": "Broader PCI scope and urgent specialist containment are required.", "recommendation": "Remove the route and obtain specialist advice.", "verification": "Confirm the route no longer receives raw card data.", "evidence": ["src/checkout.js:10"], "sourceIds": ["SRC-STRIPE-ELEMENTS"] }],
-    "claimLedger": [{ "id": "CL-RAW", "claim": "The observed route can receive raw card data.", "type": "Technical observation", "status": "Supported", "evidence": "src/checkout.js:10", "sourceIds": ["SRC-STRIPE-ELEMENTS"] }],
+    "findings": [{ "id": "RAW-001", "title": "Raw card route observed", "severity": "Critical", "status": "Supported", "category": "PCI obligation", "statementType": "Technical observation", "observation": "Raw card data can reach the merchant route.", "consequence": "Broader PCI scope and urgent specialist containment are required.", "recommendation": "Remove the route and obtain specialist advice.", "verification": "Confirm the route no longer receives raw card data.", "confidence": "High", "counterEvidence": "No alternate hosted-field path was observed for this route.", "evidence": ["src/checkout.js:10"], "sourceIds": ["SRC-STRIPE-ELEMENTS"] }],
+    "claimLedger": [{ "id": "CL-RAW", "claim": "The observed route can receive raw card data.", "type": "Technical observation", "status": "Supported", "evidence": "src/checkout.js:10", "applicability": "Applies to the observed custom checkout route.", "counterEvidence": "No contrary source evidence was found.", "confidence": "High", "sourceIds": ["SRC-STRIPE-ELEMENTS"] }],
     "controls": { "technical": [], "operational": [] },
     "remediation": {
       "pciDependencies": [{ "action": "Contain the raw-card route.", "timing": "Immediately", "owner": "Engineering", "verification": "No raw-card path remains." }],
@@ -42,7 +44,7 @@
       "defenseInDepth": []
     },
     "unknowns": ["Whether raw data was logged or retained."],
-    "sources": [{ "id": "SRC-STRIPE-ELEMENTS", "title": "Stripe Elements", "publisher": "Stripe", "url": "https://docs.stripe.com/payments/elements", "retrievedAt": "2026-09-02" }],
+    "sources": [{ "id": "SRC-STRIPE-ELEMENTS", "title": "Stripe Elements", "publisher": "Stripe", "authority": "Stripe", "url": "https://docs.stripe.com/payments/elements", "retrievedAt": "2026-09-02", "applicability": "Hosted fields are the relevant safer alternative.", "counterEvidence": "Does not prove the observed custom route uses Elements.", "confidence": "High" }],
     "disclaimer": "This is a technical PCI-readiness assessment, not certification or legal advice."
   }
 }

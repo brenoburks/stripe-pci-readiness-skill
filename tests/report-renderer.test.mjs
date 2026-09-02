@@ -104,6 +104,65 @@ test("rejects prohibited certification and unsupported paid-ASV overclaims", () 
   });
 });
 
+test("rejects PaymentIntent client secrets and received-certification claims without writing output", () => {
+  withTempDir((directory) => {
+    for (const [label, value] of [
+      ["PaymentIntent client secret", "pi_1234567890abcdef_secret_1234567890abcdef"],
+      ["received-certification claim", "The merchant received PCI certification."],
+    ]) {
+      const input = path.join(directory, `${label.replaceAll(" ", "-")}.json`);
+      const output = path.join(directory, `${label.replaceAll(" ", "-")}.html`);
+      const data = JSON.parse(fs.readFileSync(fixture, "utf8"));
+      data.report.executiveSummary.push(value);
+      fs.writeFileSync(input, JSON.stringify(data));
+
+      const result = runRenderer(input, output);
+      assert.notEqual(result.status, 0, label);
+      assert.match(result.stderr, /sensitive|secret|prohibited overclaim/i);
+      assert.equal(fs.existsSync(output), false, label);
+    }
+  });
+});
+
+test("renders source evidence and source-policy qualifiers for findings and sources", () => {
+  withTempDir((directory) => {
+    const output = path.join(directory, "pci-readiness-report.html");
+    const result = runRenderer(fixture, output);
+
+    assert.equal(result.status, 0, result.stderr);
+    const html = fs.readFileSync(output, "utf8");
+    assert.match(html, /git rev-parse HEAD and git status --short captured during the review/i);
+    assert.match(html, /Counter-evidence result/i);
+    assert.match(html, /Applicability/i);
+    assert.match(html, /Confidence/i);
+  });
+});
+
+test("rejects missing evidence sources, incoherent routing, and unexpected report properties", () => {
+  withTempDir((directory) => {
+    const invalidCases = [
+      ["empty finding sources", (data) => { data.report.findings[0].sourceIds = []; }],
+      ["empty claim sources", (data) => { data.report.claimLedger[0].sourceIds = []; }],
+      ["empty source list", (data) => { data.report.sources = []; }],
+      ["terminal misclassified as web", (data) => { data.report.inventory.integrationCategory = "routed-specialist"; data.report.inventory.routedPattern = "terminal-or-card-present"; }],
+      ["unexpected report field", (data) => { data.report.unexpected = "must be rejected"; }],
+    ];
+
+    for (const [label, mutate] of invalidCases) {
+      const input = path.join(directory, `${label.replaceAll(" ", "-")}.json`);
+      const output = path.join(directory, `${label.replaceAll(" ", "-")}.html`);
+      const data = JSON.parse(fs.readFileSync(fixture, "utf8"));
+      mutate(data);
+      fs.writeFileSync(input, JSON.stringify(data));
+
+      const result = runRenderer(input, output);
+      assert.notEqual(result.status, 0, label);
+      assert.match(result.stderr, /invalid report/i, label);
+      assert.equal(fs.existsSync(output), false, label);
+    }
+  });
+});
+
 test("accepts a raw-card urgent-review classification and an explicitly out-of-scope non-web assessment", () => {
   withTempDir((directory) => {
     for (const [fixturePath, outputName] of [[unsafeFixture, "unsafe.html"], [outOfScopeFixture, "out-of-scope.html"]]) {

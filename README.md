@@ -88,6 +88,8 @@ Starting authorities include:
 - [PCI SSC FAQ 1312](https://www.pcisecuritystandards.org/faqs/1312/)
 - [PCI SSC FAQ 1579](https://www.pcisecuritystandards.org/faqs/1579/)
 - [Stripe integration security guide](https://docs.stripe.com/security/guide)
+- [Stripe Checkout](https://docs.stripe.com/payments/checkout)
+- [Stripe embedded Checkout](https://docs.stripe.com/checkout/embedded/quickstart)
 - [Stripe Elements](https://docs.stripe.com/payments/elements)
 - [Stripe PaymentIntents](https://docs.stripe.com/payments/payment-intents)
 - [Stripe Express Checkout Element](https://docs.stripe.com/elements/express-checkout-element)
