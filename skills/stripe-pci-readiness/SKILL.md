@@ -64,7 +64,7 @@ Then provide:
 1. assessed-source and deployed-runtime provenance, including exact deployed-commit status;
 2. integration/version inventory, script inventory, and service-provider responsibility inventory;
 3. architecture and card-data flow;
-4. findings by severity with exact evidence, consequence, recommendation, and verification method;
+4. findings by severity with exact evidence, consequence, recommendation, responsible owner, and verification method;
 5. claim ledger with inline primary-source citations;
 6. preliminary PCI pathway and disqualifying conditions checked;
 7. technical controls and operational controls not provable from the repository;

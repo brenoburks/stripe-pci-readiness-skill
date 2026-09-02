@@ -124,6 +124,54 @@ test("rejects PaymentIntent client secrets and received-certification claims wit
   });
 });
 
+test("rejects Checkout Session client secrets and keyed client-secret values without rejecting explanatory prose", () => {
+  withTempDir((directory) => {
+    const invalidCases = [
+      ["Checkout Session client secret", (data) => data.report.executiveSummary.push("cs_test_a1B2c3D4e5F6g7H8")],
+      ["keyed client secret", (data) => { data.report.clientSecret = "redacted-value"; }],
+    ];
+    for (const [label, mutate] of invalidCases) {
+      const input = path.join(directory, `${label.replaceAll(" ", "-")}.json`);
+      const output = path.join(directory, `${label.replaceAll(" ", "-")}.html`);
+      const data = JSON.parse(fs.readFileSync(fixture, "utf8"));
+      mutate(data);
+      fs.writeFileSync(input, JSON.stringify(data));
+      const result = runRenderer(input, output);
+      assert.notEqual(result.status, 0, label);
+      assert.match(result.stderr, /sensitive|secret/i);
+      assert.equal(fs.existsSync(output), false, label);
+    }
+
+    const input = path.join(directory, "explanatory-prose.json");
+    const output = path.join(directory, "explanatory-prose.html");
+    const data = JSON.parse(fs.readFileSync(fixture, "utf8"));
+    data.report.executiveSummary.push("Do not include a clientSecret or client_secret value in an assessment report.");
+    fs.writeFileSync(input, JSON.stringify(data));
+    const result = runRenderer(input, output);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(fs.existsSync(output), true);
+  });
+});
+
+test("requires and renders a responsible owner for every finding", () => {
+  withTempDir((directory) => {
+    const input = path.join(directory, "owner-missing.json");
+    const output = path.join(directory, "owner-missing.html");
+    const data = JSON.parse(fs.readFileSync(fixture, "utf8"));
+    delete data.report.findings[0].owner;
+    fs.writeFileSync(input, JSON.stringify(data));
+    const invalid = runRenderer(input, output);
+    assert.notEqual(invalid.status, 0);
+    assert.match(invalid.stderr, /owner/i);
+    assert.equal(fs.existsSync(output), false);
+
+    const rendered = path.join(directory, "owner-rendered.html");
+    const valid = runRenderer(fixture, rendered);
+    assert.equal(valid.status, 0, valid.stderr);
+    assert.match(fs.readFileSync(rendered, "utf8"), /<h4>Owner<\/h4>/i);
+  });
+});
+
 test("renders source evidence and source-policy qualifiers for findings and sources", () => {
   withTempDir((directory) => {
     const output = path.join(directory, "pci-readiness-report.html");

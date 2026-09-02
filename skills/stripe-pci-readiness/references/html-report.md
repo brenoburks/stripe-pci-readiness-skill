@@ -41,7 +41,7 @@ The root object contains `schemaVersion: 2` and `report`.
 - `executiveSummary`: concise decision-relevant statements;
 - `scope`: included, excluded, and methodology arrays;
 - `paymentFlow`: numbered actor, action, and evidence records;
-- `findings`: stable ID, title, severity, status, category, statement type, observation, consequence, recommendation, verification method, confidence, counter-evidence result, evidence, and non-empty source IDs;
+- `findings`: stable ID, title, severity, status, category, statement type, observation, consequence, recommendation, responsible owner, verification method, confidence, counter-evidence result, evidence, and non-empty source IDs;
 - `claimLedger`: claim, classification, status, evidence or qualification, applicability, counter-evidence result, confidence, and non-empty source IDs;
 - `controls`: separate technical and operational records;
 - `remediation`: PCI obligations/validation dependencies, business launch rules, and defence-in-depth hardening. Each item has action, timing, owner, and verification;
@@ -52,7 +52,7 @@ Source IDs referenced by findings or claims must exist in `sources` and cannot b
 
 For any routed Stripe pattern, set `inventory.integrationScope` to `out-of-current-skill-scope`, use the exact classification `Out of scope — specialist Stripe integration`, and explain the specialist review required. Do not use the renderer to make a web-ecommerce PCI classification for Connect, Terminal/card-present, native mobile, MOTO/manual entry, Payment Links/hosted-only, or another routed pattern.
 
-The renderer rejects likely certification claims, definitive-SAq language, “paid ASV” wording, Stripe client secrets, incoherent routing, missing material source references, and unknown object properties. It also requires the provenance, inventory, script, provider, and separate action records above. These deterministic checks prevent known report defects; they do not replace professional judgement or primary-source research.
+The renderer rejects likely certification claims, definitive-SAq language, “paid ASV” wording, PaymentIntent/SetupIntent/Checkout Session client secrets, keyed `client_secret`/`clientSecret` values, incoherent routing, missing material source references, and unknown object properties. It also requires the provenance, inventory, script, provider, finding owner, and separate action records above. These deterministic checks prevent known report defects; they do not replace professional judgement or primary-source research.
 
 ## Safety behaviour
 

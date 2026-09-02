@@ -136,7 +136,7 @@
     "finding": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "title", "severity", "status", "category", "statementType", "observation", "consequence", "recommendation", "verification", "confidence", "counterEvidence", "evidence", "sourceIds"],
+      "required": ["id", "title", "severity", "status", "category", "statementType", "observation", "consequence", "recommendation", "owner", "verification", "confidence", "counterEvidence", "evidence", "sourceIds"],
       "properties": {
         "id": { "$ref": "#/$defs/text" },
         "title": { "$ref": "#/$defs/text" },
@@ -147,6 +147,7 @@
         "observation": { "$ref": "#/$defs/text" },
         "consequence": { "$ref": "#/$defs/text" },
         "recommendation": { "$ref": "#/$defs/text" },
+        "owner": { "$ref": "#/$defs/text" },
         "verification": { "$ref": "#/$defs/text" },
         "confidence": { "$ref": "#/$defs/text" },
         "counterEvidence": { "$ref": "#/$defs/text" },

@@ -104,6 +104,8 @@ function rejectSensitiveData(data) {
   if (/\b(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{16,}\b/.test(serialised)) fail("Sensitive Stripe secret detected. Remove it before rendering.");
   if (/\bwhsec_[A-Za-z0-9]{16,}\b/.test(serialised)) fail("Sensitive webhook signing secret detected. Remove it before rendering.");
   if (/\b(?:pi|seti)_[A-Za-z0-9]+_secret_[A-Za-z0-9]+\b/.test(serialised)) fail("Sensitive Stripe client secret detected. Remove it before rendering.");
+  if (/\bcs_(?:test|live)_[A-Za-z0-9_]+\b/.test(serialised)) fail("Sensitive Checkout Session client secret detected. Remove it before rendering.");
+  if (/(?<!\\)"(?:client_secret|clientSecret)"\s*:\s*"[^"]+"/.test(serialised)) fail("Sensitive client-secret value detected. Remove it before rendering.");
   for (const match of serialised.matchAll(/(?:\d[ -]?){13,19}/g)) {
     if (luhnValid(match[0])) fail("Complete payment card number detected. Use a masked last-four reference only.");
   }
@@ -193,7 +195,7 @@ function validate(data) {
     for (const field of ["actor", "action", "evidence"]) requireString(item[field], `report.paymentFlow[${index}].${field}`);
   });
 
-  validateItems(report.findings, ["id", "title", "severity", "status", "category", "statementType", "observation", "consequence", "recommendation", "verification", "confidence", "counterEvidence"], "report.findings", ["id", "title", "severity", "status", "category", "statementType", "observation", "consequence", "recommendation", "verification", "confidence", "counterEvidence", "evidence", "sourceIds"]);
+  validateItems(report.findings, ["id", "title", "severity", "status", "category", "statementType", "observation", "consequence", "recommendation", "owner", "verification", "confidence", "counterEvidence"], "report.findings", ["id", "title", "severity", "status", "category", "statementType", "observation", "consequence", "recommendation", "owner", "verification", "confidence", "counterEvidence", "evidence", "sourceIds"]);
   report.findings.forEach((item, index) => {
     if (!STATEMENT_TYPES.has(item.statementType)) fail(`Invalid report: report.findings[${index}].statementType is not an allowed evidence class.`);
     for (const field of ["evidence", "sourceIds"]) {
@@ -316,6 +318,7 @@ function renderReport(report) {
       <div><h4>Observation</h4><p>${escapeHtml(finding.observation)}</p></div>
       <div><h4>Consequence</h4><p>${escapeHtml(finding.consequence)}</p></div>
       <div><h4>Recommendation</h4><p>${escapeHtml(finding.recommendation)}</p></div>
+      <div><h4>Owner</h4><p>${escapeHtml(finding.owner)}</p></div>
       <div><h4>Verification method</h4><p>${escapeHtml(finding.verification)}</p></div>
       <div><h4>Confidence</h4><p>${escapeHtml(finding.confidence)}</p></div>
       <div><h4>Counter-evidence result</h4><p>${escapeHtml(finding.counterEvidence)}</p></div>
@@ -407,6 +410,7 @@ function main() {
   } catch (error) {
     fail(`Invalid report input: ${error.message}`);
   }
+  rejectSensitiveData(data);
   validate(data);
   const template = fs.readFileSync(templatePath, "utf8");
   const html = template
