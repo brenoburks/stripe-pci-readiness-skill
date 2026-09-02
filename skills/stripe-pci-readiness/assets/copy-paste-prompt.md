@@ -46,3 +46,7 @@ Label material statements as normative requirement, technical observation, infer
 End exactly:
 
 > This is a technical PCI-readiness assessment, not certification or legal advice.
+
+If this repository includes the installed skill and Node.js 20 with filesystem access is available, read [html-report.md](../references/html-report.md), create the structured JSON assessment, and run the supplied renderer to produce `pci-readiness-report.html`. Confirm the file exists before reporting its path. Do not write raw HTML or bypass renderer validation.
+
+If the renderer is unavailable, provide the complete report in Markdown or chat and say that HTML generation was unavailable. Do not invent a generated file.

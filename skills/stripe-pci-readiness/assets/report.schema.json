@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/brenoburks/stripe-pci-readiness-skill/blob/main/skills/stripe-pci-readiness/assets/report.schema.json",
+  "title": "Stripe PCI readiness HTML report input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "report"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "report": { "$ref": "#/$defs/report" }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1 },
+    "textArray": { "type": "array", "items": { "$ref": "#/$defs/text" } },
+    "assessment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "commit", "environment", "assessmentType"],
+      "properties": {
+        "repository": { "$ref": "#/$defs/text" },
+        "commit": { "$ref": "#/$defs/text" },
+        "environment": { "$ref": "#/$defs/text" },
+        "assessmentType": { "$ref": "#/$defs/text" }
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["classification", "confidence", "rawCardDataExposure", "launchBlockers", "keyUncertainty"],
+      "properties": {
+        "classification": { "$ref": "#/$defs/text" },
+        "confidence": { "$ref": "#/$defs/text" },
+        "rawCardDataExposure": { "$ref": "#/$defs/text" },
+        "launchBlockers": { "$ref": "#/$defs/textArray" },
+        "keyUncertainty": { "$ref": "#/$defs/text" }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["included", "excluded", "methodology"],
+      "properties": {
+        "included": { "$ref": "#/$defs/textArray" },
+        "excluded": { "$ref": "#/$defs/textArray" },
+        "methodology": { "$ref": "#/$defs/textArray" }
+      }
+    },
+    "flowStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["step", "actor", "action", "evidence"],
+      "properties": {
+        "step": { "type": "integer", "minimum": 1 },
+        "actor": { "$ref": "#/$defs/text" },
+        "action": { "$ref": "#/$defs/text" },
+        "evidence": { "$ref": "#/$defs/text" }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "severity", "status", "category", "statementType", "observation", "consequence", "recommendation", "verification", "evidence", "sourceIds"],
+      "properties": {
+        "id": { "$ref": "#/$defs/text" },
+        "title": { "$ref": "#/$defs/text" },
+        "severity": { "$ref": "#/$defs/text" },
+        "status": { "$ref": "#/$defs/text" },
+        "category": { "$ref": "#/$defs/text" },
+        "statementType": { "$ref": "#/$defs/text" },
+        "observation": { "$ref": "#/$defs/text" },
+        "consequence": { "$ref": "#/$defs/text" },
+        "recommendation": { "$ref": "#/$defs/text" },
+        "verification": { "$ref": "#/$defs/text" },
+        "evidence": { "$ref": "#/$defs/textArray" },
+        "sourceIds": { "$ref": "#/$defs/textArray" }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "claim", "type", "status", "evidence", "sourceIds"],
+      "properties": {
+        "id": { "$ref": "#/$defs/text" },
+        "claim": { "$ref": "#/$defs/text" },
+        "type": { "$ref": "#/$defs/text" },
+        "status": { "$ref": "#/$defs/text" },
+        "evidence": { "$ref": "#/$defs/text" },
+        "sourceIds": { "$ref": "#/$defs/textArray" }
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["control", "status", "evidence"],
+      "properties": {
+        "control": { "$ref": "#/$defs/text" },
+        "status": { "$ref": "#/$defs/text" },
+        "evidence": { "$ref": "#/$defs/text" }
+      }
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["technical", "operational"],
+      "properties": {
+        "technical": { "type": "array", "items": { "$ref": "#/$defs/control" } },
+        "operational": { "type": "array", "items": { "$ref": "#/$defs/control" } }
+      }
+    },
+    "remediationItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "owner", "verification"],
+      "properties": {
+        "action": { "$ref": "#/$defs/text" },
+        "owner": { "$ref": "#/$defs/text" },
+        "verification": { "$ref": "#/$defs/text" }
+      }
+    },
+    "remediation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["launchBlockers", "beforeLaunch", "postLaunch"],
+      "properties": {
+        "launchBlockers": { "type": "array", "items": { "$ref": "#/$defs/remediationItem" } },
+        "beforeLaunch": { "type": "array", "items": { "$ref": "#/$defs/remediationItem" } },
+        "postLaunch": { "type": "array", "items": { "$ref": "#/$defs/remediationItem" } }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "publisher", "url", "retrievedAt"],
+      "properties": {
+        "id": { "$ref": "#/$defs/text" },
+        "title": { "$ref": "#/$defs/text" },
+        "publisher": { "$ref": "#/$defs/text" },
+        "url": { "type": "string", "format": "uri", "pattern": "^https://" },
+        "retrievedAt": { "$ref": "#/$defs/text" }
+      }
+    },
+    "report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "subject", "generatedAt", "assessment", "outcome", "executiveSummary", "scope", "paymentFlow", "findings", "claimLedger", "controls", "remediation", "unknowns", "sources", "disclaimer"],
+      "properties": {
+        "title": { "$ref": "#/$defs/text" },
+        "subject": { "$ref": "#/$defs/text" },
+        "generatedAt": { "$ref": "#/$defs/text" },
+        "assessment": { "$ref": "#/$defs/assessment" },
+        "outcome": { "$ref": "#/$defs/outcome" },
+        "executiveSummary": { "$ref": "#/$defs/textArray" },
+        "scope": { "$ref": "#/$defs/scope" },
+        "paymentFlow": { "type": "array", "items": { "$ref": "#/$defs/flowStep" } },
+        "findings": { "type": "array", "items": { "$ref": "#/$defs/finding" } },
+        "claimLedger": { "type": "array", "items": { "$ref": "#/$defs/claim" } },
+        "controls": { "$ref": "#/$defs/controls" },
+        "remediation": { "$ref": "#/$defs/remediation" },
+        "unknowns": { "$ref": "#/$defs/textArray" },
+        "sources": { "type": "array", "items": { "$ref": "#/$defs/source" } },
+        "disclaimer": { "const": "This is a technical PCI-readiness assessment, not certification or legal advice." }
+      }
+    }
+  }
+}

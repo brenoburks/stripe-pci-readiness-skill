@@ -1,0 +1,113 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
+import test from "node:test";
+
+const root = process.cwd();
+const renderer = path.join(root, "skills", "stripe-pci-readiness", "scripts", "render-report.mjs");
+const fixture = path.join(root, "tests", "fixtures", "report-input.json");
+
+function runRenderer(input, output) {
+  return spawnSync(process.execPath, [renderer, "--input", input, "--output", output], {
+    cwd: root,
+    encoding: "utf8",
+  });
+}
+
+function withTempDir(callback) {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "stripe-pci-report-"));
+  try {
+    return callback(directory);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+}
+
+test("renders a valid assessment as one self-contained professional HTML report", () => {
+  withTempDir((directory) => {
+    const output = path.join(directory, "pci-readiness-report.html");
+    const result = runRenderer(fixture, output);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(fs.existsSync(output), true);
+
+    const html = fs.readFileSync(output, "utf8");
+    for (const heading of [
+      "Preliminary outcome",
+      "Executive summary",
+      "Scope and methodology",
+      "Architecture and card-data flow",
+      "Findings summary",
+      "Detailed findings",
+      "Claim ledger",
+      "Technical and operational controls",
+      "Prioritised remediation",
+      "Residual unknowns",
+      "Sources",
+    ]) {
+      assert.match(html, new RegExp(heading, "i"));
+    }
+
+    assert.match(html, /This is a technical PCI-readiness assessment, not certification or legal advice\./);
+    assert.match(html, /@media\s*\(max-width:/);
+    assert.match(html, /@media\s+print/);
+    assert.match(html, /class="skip-link"/);
+    assert.match(html, /aria-label="Report sections"/);
+    assert.doesNotMatch(html, /<script\b/i);
+    assert.doesNotMatch(html, /<link\b[^>]*rel=["']stylesheet/i);
+    assert.doesNotMatch(html, /@import\b|url\(\s*["']?https?:/i);
+    assert.doesNotMatch(html, /<img\b/i);
+  });
+});
+
+test("escapes report data instead of interpreting it as markup", () => {
+  withTempDir((directory) => {
+    const input = path.join(directory, "input.json");
+    const output = path.join(directory, "report.html");
+    const data = JSON.parse(fs.readFileSync(fixture, "utf8"));
+    data.report.findings[0].observation = '<svg onload="alert(1)">unsafe</svg>';
+    fs.writeFileSync(input, JSON.stringify(data));
+
+    const result = runRenderer(input, output);
+    assert.equal(result.status, 0, result.stderr);
+    const html = fs.readFileSync(output, "utf8");
+    assert.match(html, /&lt;svg onload=&quot;alert\(1\)&quot;&gt;unsafe&lt;\/svg&gt;/);
+    assert.doesNotMatch(html, /<svg onload=/i);
+  });
+});
+
+for (const [label, value] of [
+  ["Stripe secret key", ["sk", "test", "1234567890abcdefghijklmnop"].join("_")],
+  ["webhook signing secret", ["whsec", "1234567890abcdefghijklmnop"].join("_")],
+  ["complete payment card number", "4242 4242 4242 4242"],
+]) {
+  test(`rejects a likely ${label} and leaves no report`, () => {
+    withTempDir((directory) => {
+      const input = path.join(directory, "input.json");
+      const output = path.join(directory, "report.html");
+      const data = JSON.parse(fs.readFileSync(fixture, "utf8"));
+      data.report.executiveSummary.push(value);
+      fs.writeFileSync(input, JSON.stringify(data));
+
+      const result = runRenderer(input, output);
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, /sensitive|secret|card number/i);
+      assert.equal(fs.existsSync(output), false);
+    });
+  });
+}
+
+test("rejects structurally invalid input and leaves no partial report", () => {
+  withTempDir((directory) => {
+    const input = path.join(directory, "invalid.json");
+    const output = path.join(directory, "report.html");
+    fs.writeFileSync(input, JSON.stringify({ schemaVersion: 1, report: { title: "Incomplete" } }));
+
+    const result = runRenderer(input, output);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /invalid report/i);
+    assert.equal(fs.existsSync(output), false);
+  });
+});
