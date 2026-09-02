@@ -222,7 +222,7 @@ test("accepts a raw-card urgent-review classification and an explicitly out-of-s
   });
 });
 
-test("mobile report CSS removes table headers from layout and allows long status text to wrap", () => {
+test("mobile report CSS removes table headers and wraps long table and status content", () => {
   withTempDir((directory) => {
     const output = path.join(directory, "pci-readiness-report.html");
     const result = runRenderer(fixture, output);
@@ -234,6 +234,7 @@ test("mobile report CSS removes table headers from layout and allows long status
     assert.ok(mobileCss, "expected the narrow-screen media query");
     assert.match(mobileCss, /thead\s*\{\s*display:\s*none;/);
     assert.match(mobileCss, /\.status\s*\{[^}]*white-space:\s*normal;[^}]*overflow-wrap:\s*anywhere;/s);
+    assert.match(mobileCss, /td\s*\{[^}]*overflow-wrap:\s*anywhere;/s);
   });
 });
 
