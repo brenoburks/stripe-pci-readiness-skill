@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node tests/validate-skill.mjs"
+    "test": "node --test tests/report-renderer.test.mjs && node tests/validate-skill.mjs"
   },
   "engines": {
     "node": ">=20"

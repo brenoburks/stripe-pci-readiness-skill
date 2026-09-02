@@ -55,6 +55,22 @@ The report leads with:
 
 It then documents the payment flow, severity-ranked findings, a sourced claim ledger, likely validation pathway, technical and operational controls, prioritised remediation, and residual unknowns. Every report ends with a non-certification disclaimer.
 
+### Professional HTML output
+
+When Node.js 20 and filesystem access are available, the skill turns the checked assessment into a single self-contained HTML report. The report is responsive, accessible, printable to PDF, and safe to review offline because it loads no external scripts, styles, fonts, images, or other network resources.
+
+The renderer is deterministic: agents supply structured evidence and conclusions, while the repository controls layout, escaping, validation, and presentation. It rejects likely Stripe secrets, webhook signing secrets, complete payment card numbers, and CVC-shaped fields rather than placing them in a shareable report.
+
+To render the sanitised example:
+
+```bash
+node skills/stripe-pci-readiness/scripts/render-report.mjs \
+  --input tests/fixtures/report-input.json \
+  --output pci-readiness-report.html
+```
+
+Open `pci-readiness-report.html` in a browser or print it to PDF. The [HTML output guide](skills/stripe-pci-readiness/references/html-report.md) documents the complete workflow and fallback behaviour.
+
 ## Authoritative-source policy
 
 The mandatory [source policy](skills/stripe-pci-readiness/references/source-policy.md) defines authority ranking, freshness, applicability, direct citations, conflicting guidance, and fail-closed handling. The [audit checklist](skills/stripe-pci-readiness/references/audit-checklist.md) links observations to current official material rather than copying PCI DSS.
@@ -79,7 +95,7 @@ Run:
 npm test
 ```
 
-The dependency-free validator checks structure, frontmatter, local links, safety boundaries, source-policy integration, public governance files, and likely committed Stripe secrets. It does not prove that an agent will reason correctly.
+The dependency-free test suite checks the HTML renderer, output safety, structure, frontmatter, local links, source-policy integration, public governance files, and likely committed Stripe secrets. It does not prove that an agent will reason correctly.
 
 The sanitised [misleading assessment fixture](tests/fixtures/misleading-saq-a-assessment.md) and its separate [human scoring rubric](tests/fixtures/misleading-saq-a-assessment.expected.md) support behavioural evaluation without leaking the expected answer into the test input.
 

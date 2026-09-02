@@ -56,6 +56,12 @@ End exactly:
 
 > This is a technical PCI-readiness assessment, not certification or legal advice.
 
+## HTML deliverable
+
+After completing and checking the assessment, read [references/html-report.md](references/html-report.md) and generate the self-contained HTML report when Node.js 20 and filesystem access are available. Use the repository renderer; do not improvise a separate HTML template or bypass its validation.
+
+If the renderer is unavailable, provide the complete report in Markdown or chat and state that HTML generation was unavailable. Never invent a file path or claim that a report was generated when it was not.
+
 ## Reusable prompt
 
 For environments without Agent Skills support, use [assets/copy-paste-prompt.md](assets/copy-paste-prompt.md).

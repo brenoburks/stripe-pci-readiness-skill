@@ -10,7 +10,11 @@ const requiredSkillFiles = [
   "skills/stripe-pci-readiness/SKILL.md",
   "skills/stripe-pci-readiness/references/audit-checklist.md",
   "skills/stripe-pci-readiness/references/source-policy.md",
+  "skills/stripe-pci-readiness/references/html-report.md",
   "skills/stripe-pci-readiness/assets/copy-paste-prompt.md",
+  "skills/stripe-pci-readiness/assets/report-template.html",
+  "skills/stripe-pci-readiness/assets/report.schema.json",
+  "skills/stripe-pci-readiness/scripts/render-report.mjs",
   "tests/fixtures/misleading-saq-a-assessment.md",
   "tests/fixtures/misleading-saq-a-assessment.expected.md",
 ];
@@ -82,10 +86,11 @@ function validateGuidanceContract() {
     "skills/stripe-pci-readiness/SKILL.md",
     "skills/stripe-pci-readiness/references/audit-checklist.md",
     "skills/stripe-pci-readiness/references/source-policy.md",
+    "skills/stripe-pci-readiness/references/html-report.md",
     "skills/stripe-pci-readiness/assets/copy-paste-prompt.md",
   ].filter((file) => fs.existsSync(path.join(root, file)));
 
-  if (guidanceFiles.length !== 4) return;
+  if (guidanceFiles.length !== 5) return;
   const contentByFile = new Map(guidanceFiles.map((file) => [file, read(file)]));
   const allGuidance = [...contentByFile.values()].join("\n");
 
@@ -97,6 +102,10 @@ function validateGuidanceContract() {
     if (!contentByFile.get(file).includes("source-policy.md")) {
       fail(`${file} must route to source-policy.md`);
     }
+  }
+
+  if (!contentByFile.get("skills/stripe-pci-readiness/SKILL.md").includes("html-report.md")) {
+    fail("SKILL.md must route completed assessments to html-report.md");
   }
 
   const requiredConcepts = [
