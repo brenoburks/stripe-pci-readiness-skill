@@ -12,6 +12,15 @@ const requiredSkillFiles = [
   "skills/stripe-pci-readiness/references/source-policy.md",
   "skills/stripe-pci-readiness/assets/copy-paste-prompt.md",
   "tests/fixtures/misleading-saq-a-assessment.md",
+  "tests/fixtures/misleading-saq-a-assessment.expected.md",
+];
+
+const requiredPublicFiles = [
+  "README.md",
+  "LICENSE",
+  "SECURITY.md",
+  "CONTRIBUTING.md",
+  ".github/workflows/validate.yml",
 ];
 
 function fail(message) {
@@ -121,18 +130,53 @@ function validateGuidanceContract() {
 }
 
 function validateSecretSafety() {
-  const files = requiredSkillFiles.filter((file) => fs.existsSync(path.join(root, file)));
+  function walk(directory) {
+    return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+      if ([".git", "node_modules"].includes(entry.name)) return [];
+      const absolutePath = path.join(directory, entry.name);
+      return entry.isDirectory() ? walk(absolutePath) : [path.relative(root, absolutePath)];
+    });
+  }
+
+  const files = walk(root);
   const likelyStripeSecret = /\b(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{16,}\b|\bwhsec_[A-Za-z0-9]{16,}\b/;
   for (const file of files) {
     if (likelyStripeSecret.test(read(file))) fail(`Possible Stripe secret found in ${file}`);
   }
 }
 
+function validatePublicPackage() {
+  if (requiredPublicFiles.some((file) => !fs.existsSync(path.join(root, file)))) return;
+
+  const readme = read("README.md");
+  const license = read("LICENSE");
+  const security = read("SECURITY.md");
+  const contributing = read("CONTRIBUTING.md");
+  const workflow = read(".github/workflows/validate.yml");
+
+  if (!/Apache License\s+Version 2\.0/i.test(license)) fail("LICENSE must contain Apache License 2.0");
+  if (!/not affiliated with or endorsed by (?:Stripe|the PCI Security Standards Council)/i.test(readme)) {
+    fail("README must contain the Stripe and PCI SSC non-affiliation notice");
+  }
+  if (!/private vulnerability reporting/i.test(security)) fail("SECURITY.md must provide private vulnerability reporting guidance");
+  if (!/do not (?:include|submit|send).*(?:card|payment).*(?:data|credential)/is.test(security)) {
+    fail("SECURITY.md must prohibit submitting payment credentials or card data");
+  }
+  if (!/primary source/i.test(contributing) || !/retriev/i.test(contributing) || !/secondary source/i.test(contributing)) {
+    fail("CONTRIBUTING.md must enforce primary-source, retrieval-date, and secondary-source rules");
+  }
+  if (!/permissions:\s*\n\s*contents:\s*read/m.test(workflow)) fail("Workflow must use read-only contents permission");
+  if (!/npm test/.test(workflow)) fail("Workflow must run npm test");
+  if (/\bsecrets\./.test(workflow)) fail("Validation workflow must not consume repository secrets");
+}
+
 requireFiles(requiredSkillFiles);
+requireFiles(requiredPublicFiles);
 validateFrontmatter();
 validateLocalMarkdownLinks();
 validateGuidanceContract();
 validateSecretSafety();
+validatePublicPackage();
 
 if (failures.length > 0) {
   console.error("Skill validation failed:");
