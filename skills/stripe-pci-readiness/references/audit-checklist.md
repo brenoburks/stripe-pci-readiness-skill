@@ -28,6 +28,7 @@ Use the sections relevant to the detected integration. This checklist is not PCI
 
 - Identify hosted Checkout redirect, embedded Checkout, Payment Element, individual Elements, mobile SDK, direct API integration, or custom form.
 - Determine who renders every PAN, expiry, and CVC input. Inspect the live DOM when authorised; repository markup alone is insufficient.
+- Individual Elements do not determine an SAQ pathway by themselves. Do not automatically classify individual Elements as SAQ A or SAQ A-EP. Establish the deployed origin and isolation of each payment field, whether merchant-controlled elements participate in account-data capture or processing, every current eligibility condition, and the accepting entity's determination.
 - Confirm Stripe.js is loaded according to the current [Stripe integration security guide](https://docs.stripe.com/security/guide). Do not assume a package name proves the deployed script origin.
 - Trace browser input through Stripe, merchant routes, webhooks, order state, fulfilment, receipts, logs, analytics, queues, exports, support systems, and backups.
 - Search safely for PAN/CVC field names and patterns without printing discovered values. Search source, history when authorised, schemas, DTOs, fixtures, logs, error tools, and generic JSON stores.

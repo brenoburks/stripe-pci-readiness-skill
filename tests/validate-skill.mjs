@@ -17,6 +17,8 @@ const requiredSkillFiles = [
   "skills/stripe-pci-readiness/scripts/render-report.mjs",
   "tests/fixtures/misleading-saq-a-assessment.md",
   "tests/fixtures/misleading-saq-a-assessment.expected.md",
+  "tests/fixtures/individual-elements-classification.md",
+  "tests/fixtures/individual-elements-classification.expected.md",
   "tests/fixtures/unsafe-raw-card-report.json",
   "tests/fixtures/non-web-out-of-scope-report.json",
 ];
@@ -129,10 +131,23 @@ function validateGuidanceContract() {
     if (!pattern.test(allGuidance)) fail(`Guidance is missing required concept: ${label}`);
   }
 
+  for (const file of [
+    "skills/stripe-pci-readiness/SKILL.md",
+    "skills/stripe-pci-readiness/references/audit-checklist.md",
+    "skills/stripe-pci-readiness/assets/copy-paste-prompt.md",
+  ]) {
+    const content = contentByFile.get(file);
+    if (!/individual Elements[\s\S]{0,500}(?:do not|must not|never)[\s\S]{0,180}(?:automatically|by itself|alone)[\s\S]{0,180}SAQ A(?:-EP)?/i.test(content)) {
+      fail(`${file} must prohibit automatic SAQ classification from individual Elements alone`);
+    }
+  }
+
   const sourcePolicy = contentByFile.get("skills/stripe-pci-readiness/references/source-policy.md");
   for (const url of [
     "https://www.pcisecuritystandards.org/faqs/1604/",
     "https://www.pcisecuritystandards.org/faqs/1588/",
+    "https://www.pcisecuritystandards.org/faqs/1438/",
+    "https://www.pcisecuritystandards.org/faqs/1293/",
     "https://www.pcisecuritystandards.org/faqs/1312/",
     "https://www.pcisecuritystandards.org/faqs/1579/",
     "https://docs.stripe.com/security/guide",
@@ -147,6 +162,24 @@ function validateGuidanceContract() {
   const unfinished = /\b(?:TODO|TBD|FIXME)\b|\[insert[^\]]*\]|<your[-_ ][^>]+>/i;
   for (const [file, content] of contentByFile) {
     if (unfinished.test(content)) fail(`Unfinished scaffold placeholder found in ${file}`);
+  }
+}
+
+function validateBehaviouralFixtures() {
+  const inputPath = "tests/fixtures/individual-elements-classification.md";
+  const expectedPath = "tests/fixtures/individual-elements-classification.expected.md";
+  if (!fs.existsSync(path.join(root, inputPath)) || !fs.existsSync(path.join(root, expectedPath))) return;
+
+  const input = read(inputPath);
+  const expected = read(expectedPath);
+  if (!/individual Elements/i.test(input) || !/SAQ A-EP/i.test(input)) {
+    fail("Individual Elements benchmark input must exercise the observed classification failure");
+  }
+  if (!/must not (?:automatically|categorically).*(?:SAQ A-EP|SAQ A)/is.test(expected)) {
+    fail("Individual Elements benchmark rubric must reject automatic SAQ classification");
+  }
+  if (!/live DOM/i.test(expected) || !/accepting entit/i.test(expected)) {
+    fail("Individual Elements benchmark rubric must require runtime evidence and accepting-entity confirmation");
   }
 }
 
@@ -196,6 +229,7 @@ requireFiles(requiredPublicFiles);
 validateFrontmatter();
 validateLocalMarkdownLinks();
 validateGuidanceContract();
+validateBehaviouralFixtures();
 validateSecretSafety();
 validatePublicPackage();
 
