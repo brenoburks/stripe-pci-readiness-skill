@@ -107,9 +107,11 @@ Run:
 npm test
 ```
 
-The dependency-free test suite checks the HTML renderer, output safety, v2 provenance/inventory/action structure, prohibited overclaims, frontmatter, local links, source-policy integration, public governance files, and likely committed Stripe secrets. It includes safe web-Elements, unsafe raw-card, and out-of-scope non-web fixtures. It does not prove that an agent will reason correctly or replace independently scored agent evaluations.
+The dependency-free test suite checks the HTML renderer, output safety, v2 provenance/inventory/action structure, prohibited overclaims, frontmatter, local links, source-policy integration, public governance files, and likely committed Stripe secrets. It includes safe web-Elements, ambiguous individual-Elements, unsafe raw-card, and out-of-scope non-web fixtures. It does not prove that an agent will reason correctly or replace independently scored agent evaluations.
 
 The sanitised [misleading assessment fixture](tests/fixtures/misleading-saq-a-assessment.md) and its separate [human scoring rubric](tests/fixtures/misleading-saq-a-assessment.expected.md) support behavioural evaluation without leaking the expected answer into the test input.
+
+The ambiguous [individual-Elements fixture](tests/fixtures/individual-elements-classification.md) and its hidden [human scoring rubric](tests/fixtures/individual-elements-classification.expected.md) test that agents do not automatically map a Stripe product name to SAQ A or SAQ A-EP. The first recorded [Claude Sonnet evaluation](docs/evaluations/claude-sonnet-individual-elements.md) documents the isolated protocol, result and limitations without treating one passing run as universal proof.
 
 ## Limitations
 

@@ -84,6 +84,7 @@ Do not state or imply without specific current applicable evidence:
 - “SAQ A merchants do not require quarterly ASV scans.”
 - “The merchant web server is out of scope because PAN does not reach it.”
 - “This merchant is SAQ A, SAQ A-EP, SAQ D, Level 4, compliant, substantially compliant, certified, or audit-ready.”
+- “Individual Stripe Elements automatically mean SAQ A” or “individual Stripe Elements automatically mean SAQ A-EP.” Product naming alone does not establish field origin, merchant participation, deployed behaviour, or current eligibility.
 - “Stripe confirms this integration meets the script-attack eligibility criterion” without the exact Stripe document, solution, and conditions.
 - A universal number of SAQ questions, remediation duration, assessor requirement, or compliance cost.
 - That an empty DOM container, Stripe.js call, database schema search, framework setting, or successful payment alone proves the entire payment flow and environment.
@@ -107,6 +108,8 @@ Retrieved 2 September 2026. Verify again during each audit.
 
 - [PCI SSC FAQ 1604 — ASV scans for SAQ A redirect and embedded-iframe e-commerce pages](https://www.pcisecuritystandards.org/faqs/1604/) — dated June 2026. It states that current SAQ A for PCI DSS v4.x includes external ASV scanning for merchant e-commerce webpages, including outsourced redirect and embedded-iframe patterns.
 - [PCI SSC FAQ 1588 — SAQ A eligibility criteria for scripts](https://www.pcisecuritystandards.org/faqs/1588/) — dated February 2025. It describes the embedded-form criterion and the alternative ways a merchant can confirm protection from script attacks.
+- [PCI SSC FAQ 1438 — payment-page elements and iframe eligibility](https://www.pcisecuritystandards.org/faqs/1438/) — use the current answer to assess which payment-page elements capture or process account data and where those elements originate. Do not turn it into a product-name shortcut.
+- [PCI SSC FAQ 1293 — SAQ A and SAQ A-EP payment-page origins](https://www.pcisecuritystandards.org/faqs/1293/) — use with the current SAQs and FAQ 1438 when distinguishing merchant and compliant-provider payment-page elements.
 - [PCI SSC — merchant website scope when SAQ A criteria are met](https://www.pcisecuritystandards.org/faqs/is-a-merchant-website-still-in-scope-for-pci-dss-if-it-meets-all-the-criteria-for-saq-a/) — official FAQ page, modified 1 April 2026 when retrieved. It says the merchant web server remains in scope for examination of its configuration and payment redirection mechanism.
 - [PCI SSC — January 2025 SAQ A update](https://blog.pcisecuritystandards.org/important-updates-announced-for-merchants-validating-to-self-assessment-questionnaire-a) — explains removal of Requirements 6.4.3, 11.6.1, and 12.3.1 from SAQ A and addition of an eligibility criterion concerning script attacks; it does not say embedded iframes first became SAQ A-eligible in 2025.
 - [PCI SSC document library](https://www.pcisecuritystandards.org/document_library/) — retrieve the current PCI DSS and applicable SAQ rather than copying an old questionnaire into the skill.
